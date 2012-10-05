@@ -1,0 +1,16 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+
+START=50
+
+boot() {
+	/usr/lib/qos/generate.sh firewall | sh
+}
+
+start() {
+	qos-start
+}
+
+stop() {
+	qos-stop
+}

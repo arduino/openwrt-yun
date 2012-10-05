@@ -1,0 +1,56 @@
+--- a/action.c
++++ b/action.c
+@@ -39,7 +39,7 @@ static void action_dumb(const struct set
+  * Returns: Newly allocated string in "key=value" form
+  *
+  */
+-static char* alloc_env(const char *key, const char *value) {
++char* alloc_env(const char *key, const char *value) {
+ 	size_t keylen, vallen;
+ 	char *combined;
+ 
+--- a/action.h
++++ b/action.h
+@@ -12,5 +12,6 @@
+ #include "settings.h"
+ 
+ void action_perform(struct settings_t *, struct uevent_t *);
++char* alloc_env(const char *, const char *);
+ #endif /* ifndef ACTION_H */
+ 
+--- a/workers/worker_fork.c
++++ b/workers/worker_fork.c
+@@ -380,6 +380,7 @@ static void worker_fork_deinit(void *in_
+ 
+ 
+ static int worker_fork_process(void *in_ctx, struct uevent_t *uevent) {
++	char **env;
+ 	int i;
+ 	struct worker_fork_child_t *child;
+ 	struct worker_fork_ctx_t *ctx = in_ctx;
+@@ -406,6 +407,12 @@ static int worker_fork_process(void *in_
+ 		 * No child process is currently available.
+ 		 */
+ 		if (child == NULL) {
++			env = xmalloc(sizeof(char *) * uevent->env_vars_c);
++			for (i = 0; i < uevent->env_vars_c; i++) {
++				env[i] = alloc_env(uevent->env_vars[i].key, uevent->env_vars[i].value);
++				putenv(env[i]);
++			}
++
+ 			/*
+ 			 * Are the matching rules trivial enough that we
+ 			 * can execute them in the main process?
+@@ -421,6 +428,12 @@ static int worker_fork_process(void *in_
+ 			 */
+ 			if (ctx->children_count < ctx->max_children)
+ 				child = worker_fork_spawn(ctx);
++
++			for (i = 0; i < uevent->env_vars_c; i++) {
++				unsetenv(uevent->env_vars[i].key);
++				free(env[i]);
++			}
++			free(env);
+ 		}
+ 
+ 		/*

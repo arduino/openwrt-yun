@@ -1,0 +1,200 @@
+#
+
+menuconfig EXTERNAL_TOOLCHAIN
+	bool
+	prompt "Use external toolchain"  if DEVEL
+	help
+	  If enabled, OpenWrt will compile using an existing toolchain instead of compiling one
+
+	config NATIVE_TOOLCHAIN
+		bool
+		prompt "Use host's toolchain"  if DEVEL
+		depends EXTERNAL_TOOLCHAIN
+		select NO_STRIP
+		help
+		  If enabled, OpenWrt will compile using the native toolchain for your host instead of compiling one
+
+	config TARGET_NAME
+		string
+		prompt "Target name"  if DEVEL
+		depends EXTERNAL_TOOLCHAIN && !NATIVE_TOOLCHAIN
+		default "arm-unknown-linux-gnu"      if arm
+		default "armeb-unknown-linux-gnu"    if armeb
+		default "i486-unknown-linux-gnu"     if i386
+		default "mips-unknown-linux-gnu"     if mips
+		default "mipsel-unknown-linux-gnu"   if mipsel
+		default "powerpc-unknown-linux-gnu"  if powerpc
+		default "x86_64-unknown-linux-gnu"   if x86_64
+
+	config TOOLCHAIN_PREFIX
+		string
+		prompt "Toolchain prefix"  if DEVEL
+		depends EXTERNAL_TOOLCHAIN && !NATIVE_TOOLCHAIN
+		default "arm-unknown-linux-gnu-"      if arm
+		default "armeb-unknown-linux-gnu-"    if armeb
+		default "i486-unknown-linux-gnu-"     if i386
+		default "mips-unknown-linux-gnu-"     if mips
+		default "mipsel-unknown-linux-gnu-"   if mipsel
+		default "powerpc-unknown-linux-gnu-"  if powerpc
+		default "x86_64-unknown-linux-gnu-"   if x86_64
+
+	config TOOLCHAIN_ROOT
+		string
+		prompt "Toolchain root"  if DEVEL
+		depends EXTERNAL_TOOLCHAIN && !NATIVE_TOOLCHAIN
+		default "/opt/cross/arm-unknown-linux-gnu"      if arm
+		default "/opt/cross/armeb-unknown-linux-gnu"    if armeb
+		default "/opt/cross/i486-unknown-linux-gnu"     if i386
+		default "/opt/cross/mips-unknown-linux-gnu"     if mips
+		default "/opt/cross/mipsel-unknown-linux-gnu"   if mipsel
+		default "/opt/cross/powerpc-unknown-linux-gnu"  if powerpc
+		default "/opt/cross/x86_64-unknown-linux-gnu"   if x86_64
+
+	config TOOLCHAIN_BIN_PATH
+		string
+		prompt "Toolchain program path"  if DEVEL
+		depends EXTERNAL_TOOLCHAIN && !NATIVE_TOOLCHAIN
+		default "./usr/bin ./bin"
+		help
+		  Specify additional directories searched for toolchain binaries (override PATH)
+		  Use ./DIR for directories relative to the root above
+
+	config TOOLCHAIN_INC_PATH
+		string
+		prompt "Toolchain include path"  if DEVEL
+		depends EXTERNAL_TOOLCHAIN && !NATIVE_TOOLCHAIN
+		default "./usr/include ./include"
+		help
+		  Specify additional directories searched for header files (override CPPFLAGS)
+		  Use ./DIR for directories relative to the root above
+
+	config TOOLCHAIN_LIB_PATH
+		string
+		prompt "Toolchain library path"  if DEVEL
+		depends EXTERNAL_TOOLCHAIN && !NATIVE_TOOLCHAIN
+		default "./usr/lib ./lib"
+		help
+		  Specify additional directories searched for libraries (override LDFLAGS)
+		  Use ./DIR for directories relative to the root above
+
+config NEED_TOOLCHAIN
+	bool
+	depends DEVEL
+	default y if !EXTERNAL_TOOLCHAIN
+
+menuconfig TOOLCHAINOPTS
+	bool "Toolchain Options"  if DEVEL
+	depends NEED_TOOLCHAIN
+
+menuconfig EXTRA_TARGET_ARCH
+	bool
+	prompt "Enable an extra toolchain target architecture" if TOOLCHAINOPTS
+	depends !sparc
+	default y	if powerpc64
+	default n
+	help
+	  Some builds may require a 'biarch' toolchain. This option
+	  allows you to specify an additional target arch.
+
+	  Most people will answer N here.
+
+	config EXTRA_TARGET_ARCH_NAME
+		string
+		default "powerpc64"	if powerpc64
+		prompt "Extra architecture name" if EXTRA_TARGET_ARCH
+		help
+		  Specify the cpu name (eg powerpc64 or x86_64) of the
+		  additional target architecture.
+
+	config EXTRA_TARGET_ARCH_OPTS
+		string
+		default "-m64"		if powerpc64
+		prompt "Extra architecture compiler options" if EXTRA_TARGET_ARCH
+		help
+		  If you're specifying an addition target architecture,
+		  you'll probably need to also provide options to make
+		  the compiler use this alternate arch.
+
+		  For example, if you're building a compiler that can build
+		  both powerpc and powerpc64 binaries, you'll need to
+		  specify -m64 here.
+
+comment "Binary tools"
+	depends TOOLCHAINOPTS
+
+source "toolchain/binutils/Config.in"
+
+comment "Compiler"
+	depends TOOLCHAINOPTS
+
+source "toolchain/gcc/Config.in"
+
+comment "C Library"
+	depends TOOLCHAINOPTS
+
+choice
+	prompt "C Library implementation" if TOOLCHAINOPTS
+	default USE_UCLIBC
+	help
+	  Select the C library implementation.
+
+	config USE_EGLIBC
+		bool "Use eglibc"
+		depends !avr32
+	
+	config USE_UCLIBC
+		bool "Use uClibc"
+
+endchoice
+
+source "toolchain/eglibc/Config.in"
+source "toolchain/uClibc/Config.in"
+
+comment "Debuggers"
+	depends TOOLCHAINOPTS
+
+config GDB
+	bool
+	depends !avr32
+	prompt "Build gdb" if TOOLCHAINOPTS
+	default y
+	help
+		Enable if you want to build the gdb
+
+config INSIGHT
+	bool
+	prompt "Build insight-gdb" if TOOLCHAINOPTS
+	select GDB
+	default n
+	help
+		Enable if you want to build insight-gdb
+
+config USE_UCLIBC
+	bool
+	default y if !TOOLCHAINOPTS && !EXTERNAL_TOOLCHAIN && !NATIVE_TOOLCHAIN
+
+config USE_EXTERNAL_LIBC
+	bool
+	default y if EXTERNAL_TOOLCHAIN || NATIVE_TOOLCHAIN
+
+source "toolchain/gcc/Config.version"
+
+source "toolchain/eglibc/Config.version"
+source "toolchain/uClibc/Config.version"
+
+config LIBC
+	string
+	default "eglibc"  if USE_EGLIBC
+	default "uClibc"  if USE_UCLIBC
+
+config LIBC_VERSION
+	string
+	default EGLIBC_VERSION  if USE_EGLIBC
+	default UCLIBC_VERSION  if USE_UCLIBC
+
+config TARGET_SUFFIX
+	string
+	default "gnueabi"         if (USE_EGLIBC) && (arm || armeb)
+	default "gnu"             if (USE_EGLIBC) && !(arm || armeb)
+	default "uclibcgnueabi"   if USE_UCLIBC && (arm || armeb)
+	default "uclibc"          if USE_UCLIBC && !(arm || armeb)

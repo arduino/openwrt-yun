@@ -1,0 +1,111 @@
+#!/bin/sh
+
+rt2x00_eeprom_die() {
+	echo "rt2x00 eeprom: " "$*"
+	exit 1
+}
+
+rt2x00_eeprom_extract() {
+	local part=$1
+	local offset=$2
+	local count=$3
+	local mtd
+
+	. /etc/functions.sh
+
+	mtd=$(find_mtd_part $part)
+	[ -n "$mtd" ] || \
+		rt2x00_eeprom_die "no mtd device found for partition $part"
+
+	dd if=$mtd of=/lib/firmware/$FIRMWARE bs=1 skip=$offset count=$count 2>/dev/null || \
+		rt2x00_eeprom_die "failed to extract from $mtd"
+}
+
+[ -e /lib/firmware/$FIRMWARE ] && exit 0
+
+. /lib/ramips.sh
+
+board=$(ramips_board_name)
+
+case "$FIRMWARE" in
+"RT288X.eeprom" | \
+"RT305X.eeprom" | \
+"RT3883.eeprom")
+	case $board in
+	dir-300-b1 | \
+	dir-600-b1 | \
+	dir-600-b2)
+		rt2x00_eeprom_extract "devdata" 16384 272
+		;;
+
+	dap-1350)
+		rt2x00_eeprom_extract "devdata" 0 272
+		;;
+
+	rt-n10-plus | \
+	rt-g32-b1)
+		rt2x00_eeprom_extract "devconf" 0 272
+		;;
+
+	f5d8235-v1 | \
+	f5d8235-v2)
+		rt2x00_eeprom_extract "u-boot" 262144 272
+		;;
+
+	3g-6200n | \
+	all0239-3g | \
+	all0256n | \
+	all5002 | \
+	argus-atp52b | \
+	bc2 | \
+	carambola | \
+	dir-615-h1 | \
+	dir-620-a1 | \
+	esr-9753 | \
+	fonera20n | \
+	freestation5 | \
+	hw550-3g | \
+	mofi3500-3gn | \
+	pwh2004 | \
+	nbg-419n | \
+	nw718 | \
+	omni-emb | \
+	psr-680w | \
+	rt-n15 | \
+	rt-n56u | \
+	sl-r7205 | \
+	v11st-fe | \
+	v22rw-2x2 | \
+	w306r-v20 | \
+	w502u | \
+	wcr-150gn | \
+	whr-g300n | \
+	wl-330n | \
+	wl-330n3g | \
+	wl-351 | \
+	wli-tx4-ag300n | \
+	wr512-3gn | \
+	wr6202 | \
+	ur-336un | \
+	xdxrn502j)
+		rt2x00_eeprom_extract "factory" 0 272
+		;;
+
+	wl341v3)
+		rt2x00_eeprom_extract "board-nvram" 64880 272
+		;;
+
+	*)
+		rt2x00_eeprom_die "board $board is not supported yet"
+		;;
+	esac
+	;;
+
+"rt2x00pci_1_0.eeprom")
+	case $board in
+	rt-n56u)
+		rt2x00_eeprom_extract "factory" 32768 272
+		;;
+	esac
+	;;
+esac

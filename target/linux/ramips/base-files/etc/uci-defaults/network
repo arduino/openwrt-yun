@@ -1,0 +1,217 @@
+#!/bin/sh
+
+. /etc/functions.sh
+. /lib/ramips.sh
+. /lib/functions/uci-defaults.sh
+
+if [ ! -x /usr/sbin/maccalc ]; then
+	echo "$0: maccalc not found!"
+	return
+fi
+
+ramips_setup_rt3x5x_vlans()
+{
+	if [ ! -x /sbin/swconfig ]; then
+		# legacy default
+		ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
+		return
+	fi
+	local wanports=""
+	local lanports=""
+	swconfig dev rt305x set reset 1
+	for port in 5 4 3 2 1 0; do
+		if [ `swconfig dev rt305x port $port get disable` = "1" ]; then
+			continue
+		fi
+		if [ `swconfig dev rt305x port $port get lan` = "0" ]; then
+			wanports="$port $wanports"
+		else
+			lanports="$port $lanports"
+		fi
+	done
+	ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
+	ucidef_add_switch "rt305x" "1" "1"
+	ucidef_add_switch_vlan "rt305x" "1" "$lanports 6t"
+	ucidef_add_switch_vlan "rt305x" "2" "$wanports 6t"
+}
+
+ramips_setup_interfaces()
+{
+	local board="$1"
+
+	ucidef_set_interface_loopback
+
+	case $board in
+	all0256n | \
+	all5002)
+		ucidef_set_interface_lan "eth0"
+		;;
+
+	dir-615-h1 | \
+	wl-330n)
+		ucidef_set_interface_lan "eth0.1"
+		;;
+
+	3g-6200n | \
+	argus-atp52b | \
+	b2c | \
+	nw718 | \
+	psr-680w | \
+	sl-r7205 | \
+	w502u | \
+	wr6202)
+		ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
+		;;
+
+	f5d8235-v1 | \
+	f5d8235-v2 | \
+	ur-336un)
+		ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
+		;;
+
+	v11st-fe)
+		ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
+		ucidef_add_switch "switch0" "1" "1"
+		ucidef_add_switch_vlan "switch0" "1" "1 2 3 4 5t"
+		ucidef_add_switch_vlan "switch0" "2" "0 5t"
+		;;
+
+	rt-n15 | \
+	wl-351)
+		ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
+		ucidef_add_switch "switch0" "1" "1"
+		ucidef_add_switch_vlan "switch0" "1" "0 1 2 3 5t"
+		ucidef_add_switch_vlan "switch0" "2" "4 5t"
+		;;
+
+	rt-n56u)
+		ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
+		ucidef_add_switch "switch0" "1" "1"
+		ucidef_add_switch_vlan "switch0" "1" "0 1 2 3 8t"
+		ucidef_add_switch_vlan "switch0" "2" "4 8t"
+		;;
+
+	freestation5 | \
+	wcr-150gn)
+		ucidef_set_interfaces_lan_wan "eth0.2" "eth0.1"
+		;;
+
+	wli-tx4-ag300n)
+		ucidef_set_interface_lan "eth0"
+		;;
+
+	*)
+		RT3X5X=`cat /proc/cpuinfo | egrep "(RT3.5|RT5350)"`
+		if [ -n "${RT3X5X}" ]; then
+			ramips_setup_rt3x5x_vlans
+		else
+			ucidef_set_interfaces_lan_wan "eth0" "eth1"
+		fi
+		;;
+	esac
+}
+
+ramips_setup_macs()
+{
+	local board="$1"
+	local lan_mac=""
+	local wan_mac=""
+
+	case $board in
+	all0256n | \
+	all5002 | \
+	dir-615-h1)
+		lan_mac=$(ramips_get_mac_binary factory 40)
+		;;
+	3g-6200n | \
+	argus-atp52b | \
+	bc2 | \
+	f5d8235-v1 | \
+	nw718 | \
+	psr-680w | \
+	rt-n15 | \
+	sl-r7205 | \
+	wl-351)
+		lan_mac=$(ramips_get_mac_binary factory 4)
+		wan_mac=$(/usr/sbin/maccalc add "$lan_mac" 1)
+		;;
+
+	w306r-v20)
+		lan_mac=$(ramips_get_mac_binary factory 4)
+		wan_mac=$(/usr/sbin/maccalc add "$lan_mac" 5)
+		;;
+
+	fonera20n)
+		lan_mac=$(ramips_get_mac_binary factory 40)
+		wan_mac=$(/usr/sbin/maccalc add "$lan_mac" 1)
+		;;
+
+	dir-300-b1 |\
+	dir-300-b2 |\
+	dir-600-b1)
+		lan_mac=$(ramips_get_mac_binary devdata 16388)
+		wan_mac=$(/usr/sbin/maccalc add "$lan_mac" 1)
+		;;
+
+	dir-620-a1)
+		lan_mac=$(ramips_get_mac_binary factory 4)
+		lan_mac=$(maccalc or "$lan_mac" "02:00:00:00:00:00")
+		wan_mac=$(/usr/sbin/maccalc add "$lan_mac" 1)
+		;;
+
+	esr-9753 | \
+	ur-336un)
+		lan_mac=$(ramips_get_mac_binary devdata 16388)
+		wan_mac=$(/usr/sbin/maccalc add "$lan_mac" 1)
+		;;
+
+	nbg-419n | \
+	wcr-150gn)
+                lan_mac=$(ramips_get_mac_binary factory 4)
+                wan_mac=$(ramips_get_mac_binary factory 40)
+		;;
+
+	f5d8235-v2)
+		lan_mac=$(ramips_get_mac_binary "u-boot" 262148)
+		wan_mac=$(/usr/sbin/maccalc add "$lan_mac" 1)
+		;;
+
+	rt-n56u)
+		lan_mac=$(ramips_get_mac_binary factory 4)
+		wan_mac=$(ramips_get_mac_binary factory 32772)
+		;;
+
+	all0239-3g | \
+	carambola | \
+	w502u)
+		lan_mac=$(ramips_get_mac_binary factory 40)
+		wan_mac=$(ramips_get_mac_binary factory 46)
+		;;
+
+	wl341v3)
+		lan_mac=$(ramips_get_mac_binary board-nvram 65440)
+		wan_mac=$(/usr/sbin/maccalc add "$lan_mac" 1)
+		;;
+
+	wli-tx4-ag300n)
+		lan_mac=$(ramips_get_mac_binary factory 4)
+		;;
+
+	esac
+
+	[ -n "$lan_mac" ] && ucidef_set_interface_macaddr lan $lan_mac
+	[ -n "$wan_mac" ] && ucidef_set_interface_macaddr wan $wan_mac
+}
+
+[ -e /etc/config/network ] && exit 0
+
+touch /etc/config/network
+
+board=$(ramips_board_name)
+
+ramips_setup_interfaces $board
+ramips_setup_macs $board
+
+uci commit network
+
+exit 0

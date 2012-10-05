@@ -1,0 +1,162 @@
+source "tmp/.config-target.in"
+
+# Kernel/Hardware features
+
+config HAS_SPE_FPU
+	depends powerpc
+	select HAS_FPU
+	bool
+
+config HAS_FPU
+	bool
+
+config AUDIO_SUPPORT
+	bool
+
+config GPIO_SUPPORT
+	bool
+
+config PCI_SUPPORT
+	select AUDIO_SUPPORT
+	bool
+
+config PCIE_SUPPORT
+	bool
+
+config PCMCIA_SUPPORT
+	bool
+
+config USB_SUPPORT
+	select AUDIO_SUPPORT
+	bool
+
+config USB_GADGET_SUPPORT
+	bool
+
+config RTC_SUPPORT
+	bool
+
+config BIG_ENDIAN
+	bool
+
+config USES_INITRAMFS
+	bool
+
+config USES_SQUASHFS
+	bool
+
+config USES_JFFS2
+	bool
+
+config USES_EXT4
+	bool
+
+config USES_TARGZ
+	bool
+
+config USES_CPIOGZ
+	bool
+
+config USES_UBIFS
+	bool
+
+config PROFILE_KCONFIG
+	bool
+
+config NOMMU
+	bool
+
+# Architecture selection
+
+config arm
+	bool
+
+config armeb
+	select BIG_ENDIAN
+	bool
+
+config avr32
+	select BIG_ENDIAN
+	bool
+
+config cris
+	bool
+
+config i386
+	bool
+
+config i686
+	bool 
+
+config m68k
+	bool
+
+config mips
+	select BIG_ENDIAN
+	bool
+
+config mipsel
+	bool
+
+config mips64
+	select BIG_ENDIAN
+	bool
+
+config mips64el
+	bool
+
+config powerpc
+	select BIG_ENDIAN
+	bool
+
+config powerpc64
+	select BIG_ENDIAN
+	bool
+
+config sh3
+	bool
+
+config sh3eb
+	select BIG_ENDIAN
+	bool
+
+config sh4
+	bool
+
+config sh4eb
+	select BIG_ENDIAN
+	bool
+
+config sparc
+	select BIG_ENDIAN
+	bool
+
+config ubicom32
+	select BIG_ENDIAN
+	bool
+
+config x86_64
+	bool
+
+config ARCH
+	string
+	default "arm"       if arm
+	default "armeb"     if armeb
+	default "avr32"     if avr32
+	default "cris"      if cris
+	default "i386"      if i386
+	default "i686"      if i686
+	default "m68k"      if m68k
+	default "mips"      if mips
+	default "mipsel"    if mipsel
+	default "mips64"    if mips64
+	default "mips64el"  if mips64el
+	default "powerpc"   if powerpc
+	default "sh3"       if sh3
+	default "sh3eb"     if sh3eb
+	default "sh4"       if sh4
+	default "sh4eb"     if sh4eb
+	default "sparc"     if sparc
+	default "ubicom32"  if ubicom32
+	default "x86_64"    if x86_64
+

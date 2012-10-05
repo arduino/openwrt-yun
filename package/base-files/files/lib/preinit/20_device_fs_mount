@@ -1,0 +1,37 @@
+#!/bin/sh
+# Copyright (C) 2006 OpenWrt.org
+# Copyright (C) 2010 Vertical Communications
+
+do_move_devtmpfs() {
+    local mnt="$(grep devtmpfs /proc/mounts)"
+          mnt="${mnt#* }"; mnt="${mnt%% *}"
+
+    [ "$mnt" = "/dev" ] || mount -o move "$mnt" /dev
+}
+
+do_mount_devfs() {
+    mount devfs /dev -t devfs
+}
+
+do_mount_hotplug() {
+    mount -t tmpfs tmpfs /dev -o mode=0755,size=512K
+}
+
+do_mount_udev() {
+    mount -n -t tmpfs -o mode=0755 udev /dev
+}
+
+choose_device_fs() {
+    if grep -q devtmpfs /proc/mounts; then
+    	do_move_devtmpfs
+    elif grep -q devfs /proc/filesystems; then
+        do_mount_devfs
+    elif [ -x /sbin/hotplug2 ]; then
+        do_mount_hotplug
+    elif [ -x /sbin/udevd ]; then
+        do_mount_udev
+    fi
+}
+
+boot_hook_add preinit_essential choose_device_fs
+

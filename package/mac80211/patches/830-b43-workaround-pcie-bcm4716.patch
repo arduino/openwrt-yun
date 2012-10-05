@@ -1,0 +1,134 @@
+From 4f214b1ead0af7439921637645cb63f378516175 Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Sat, 21 Jan 2012 18:48:38 +0100
+Subject: [PATCH 33/34] b43: add workaround for b43 on pcie bus of bcm4716.
+
+bcm4716 (which includes 4717 & 4718), plus 4706 on PCIe can reorder
+transactions. As a fix, a read after write is performed on certain
+places in the code. Older chips and the newer 5357 family don't require
+this fix.
+This code is based on the brcmsmac driver.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/b43/b43.h        |   26 ++++++++++++++++++++++++++
+ drivers/net/wireless/b43/bus.h        |   10 ++++++++++
+ drivers/net/wireless/b43/phy_common.c |    6 ++++++
+ drivers/net/wireless/b43/phy_n.c      |   10 +++++-----
+ 4 files changed, 47 insertions(+), 5 deletions(-)
+
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -1048,6 +1048,32 @@ static inline bool b43_using_pio_transfe
+ 	return dev->__using_pio_transfers;
+ }
+ 
++/*
++ * bcm4716 (which includes 4717 & 4718), plus 4706 on PCIe can reorder
++ * transactions. As a fix, a read after write is performed on certain places
++ * in the code. Older chips and the newer 5357 family don't require this fix.
++ */
++#ifdef CONFIG_BCM47XX_BCMA
++#include <asm/mach-bcm47xx/bcm47xx.h>
++static inline void b43_wflush16(struct b43_wldev *dev, u16 offset, u16 value)
++{
++	if (b43_bus_host_is_pci(dev->dev) &&
++	    bcm47xx_bus_type == BCM47XX_BUS_TYPE_BCMA &&
++	    (bcm47xx_bus.bcma.bus.chipinfo.id == 0x4716 ||
++	     bcm47xx_bus.bcma.bus.chipinfo.id == 0x5300)) {
++		b43_write16(dev, offset, value);
++		b43_read16(dev, offset);
++	} else {
++		b43_write16(dev, offset, value);
++	}
++}
++#else
++static inline void b43_wflush16(struct b43_wldev *dev, u16 offset, u16 value)
++{
++	b43_write16(dev, offset, value);
++}
++#endif
++
+ /* Message printing */
+ __printf(2, 3) void b43info(struct b43_wl *wl, const char *fmt, ...);
+ __printf(2, 3) void b43err(struct b43_wl *wl, const char *fmt, ...);
+--- a/drivers/net/wireless/b43/bus.h
++++ b/drivers/net/wireless/b43/bus.h
+@@ -60,6 +60,16 @@ static inline bool b43_bus_host_is_sdio(
+ 	return (dev->bus_type == B43_BUS_SSB &&
+ 		dev->sdev->bus->bustype == SSB_BUSTYPE_SDIO);
+ }
++static inline bool b43_bus_host_is_pci(struct b43_bus_dev *dev)
++{
++	if (dev->bus_type == B43_BUS_SSB)
++		return (dev->sdev->bus->bustype == SSB_BUSTYPE_PCI);
++#ifdef CONFIG_B43_BCMA
++	if (dev->bus_type == B43_BUS_BCMA)
++		return (dev->bdev->bus->hosttype == BCMA_HOSTTYPE_PCI);
++#endif
++	return false;
++}
+ 
+ struct b43_bus_dev *b43_bus_dev_bcma_init(struct bcma_device *core);
+ struct b43_bus_dev *b43_bus_dev_ssb_init(struct ssb_device *sdev);
+--- a/drivers/net/wireless/b43/phy_common.c
++++ b/drivers/net/wireless/b43/phy_common.c
+@@ -266,6 +266,12 @@ void b43_phy_write(struct b43_wldev *dev
+ {
+ 	assert_mac_suspended(dev);
+ 	dev->phy.ops->phy_write(dev, reg, value);
++#ifdef CONFIG_BCM47XX
++	if (b43_bus_host_is_pci(dev->dev) && reg == 0x72) {
++		b43_read16(dev, B43_MMIO_PHY_VER);
++		return;
++	}
++#endif
+ 	if (++dev->phy.writes_counter == B43_MAX_WRITES_IN_ROW) {
+ 		b43_read16(dev, B43_MMIO_PHY_VER);
+ 		dev->phy.writes_counter = 0;
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -5423,14 +5423,14 @@ static inline void check_phyreg(struct b
+ static u16 b43_nphy_op_read(struct b43_wldev *dev, u16 reg)
+ {
+ 	check_phyreg(dev, reg);
+-	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
++	b43_wflush16(dev, B43_MMIO_PHY_CONTROL, reg);
+ 	return b43_read16(dev, B43_MMIO_PHY_DATA);
+ }
+ 
+ static void b43_nphy_op_write(struct b43_wldev *dev, u16 reg, u16 value)
+ {
+ 	check_phyreg(dev, reg);
+-	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
++	b43_wflush16(dev, B43_MMIO_PHY_CONTROL, reg);
+ 	b43_write16(dev, B43_MMIO_PHY_DATA, value);
+ }
+ 
+@@ -5438,7 +5438,7 @@ static void b43_nphy_op_maskset(struct b
+ 				 u16 set)
+ {
+ 	check_phyreg(dev, reg);
+-	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
++	b43_wflush16(dev, B43_MMIO_PHY_CONTROL, reg);
+ 	b43_maskset16(dev, B43_MMIO_PHY_DATA, mask, set);
+ }
+ 
+@@ -5449,7 +5449,7 @@ static u16 b43_nphy_op_radio_read(struct
+ 	/* N-PHY needs 0x100 for read access */
+ 	reg |= 0x100;
+ 
+-	b43_write16(dev, B43_MMIO_RADIO_CONTROL, reg);
++	b43_wflush16(dev, B43_MMIO_RADIO_CONTROL, reg);
+ 	return b43_read16(dev, B43_MMIO_RADIO_DATA_LOW);
+ }
+ 
+@@ -5458,7 +5458,7 @@ static void b43_nphy_op_radio_write(stru
+ 	/* Register 1 is a 32-bit register. */
+ 	B43_WARN_ON(reg == 1);
+ 
+-	b43_write16(dev, B43_MMIO_RADIO_CONTROL, reg);
++	b43_wflush16(dev, B43_MMIO_RADIO_CONTROL, reg);
+ 	b43_write16(dev, B43_MMIO_RADIO_DATA_LOW, value);
+ }
+ 
