@@ -153,6 +153,7 @@ menuconfig VERSIONOPT
 	config VERSION_NICK
 		string
 		prompt "Release version nickname" if VERSIONOPT
+		default "Attitude Adjustment" if VERSIONOPT
 		help
 			This is the release codename embedded in the image.
 			If unspecified, it defaults to the name of source branch.
@@ -168,7 +169,7 @@ menuconfig VERSIONOPT
 	config VERSION_REPO
 		string
 		prompt "Release repository" if VERSIONOPT
-		default "http://downloads.openwrt.org/snapshots/trunk/%T/packages" if VERSIONOPT
+		default "http://downloads.openwrt.org/attitude_adjustment/12.09-beta2/%S/packages" if VERSIONOPT
 		help
 			This is the repository address embedded in the image, it defaults
 			to the trunk snapshot repo; the url may contain the following placeholders:
