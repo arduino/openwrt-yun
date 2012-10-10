@@ -225,6 +225,10 @@ define Build/Prepare
 		$(PKG_BUILD_DIR)/hal/public/*.inc
 	$(SED) 's,march=armv4,march=armv5te,' \
 		$(PKG_BUILD_DIR)/hal/public/xscale*.inc
+	$(SED) 's,march=armv6j,march=armv6k,' \
+		$(PKG_BUILD_DIR)/hal/public/arm11*.inc
+	$(SED) 's,mtune=arm1136j-s,mtune=mpcore,' \
+		$(PKG_BUILD_DIR)/hal/public/arm11*.inc
 endef
 
 ifeq ($(findstring AHB,$(BUS)),AHB)
