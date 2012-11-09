@@ -9,7 +9,7 @@ include $(INCLUDE_DIR)/image.mk
 
 export PATH=$(TARGET_PATH):/sbin
 
-GRUB2_MODULES = at_keyboard biosdisk boot chain configfile ext2 linux ls part_msdos reboot serial vga
+GRUB2_MODULES = biosdisk boot chain configfile ext2 linux ls part_msdos reboot serial vga
 GRUB_TERMINALS =
 GRUB_SERIAL_CONFIG =
 GRUB_TERMINAL_CONFIG =
@@ -18,6 +18,12 @@ GRUB_CONSOLE_CMDLINE =
 ifneq ($(CONFIG_X86_GRUB_CONSOLE),)
   GRUB_CONSOLE_CMDLINE += console=tty0
   GRUB_TERMINALS += console
+endif
+
+USE_ATKBD = generic kvm_guest
+
+ifneq ($(strip $(foreach subtarget,$(USE_ATKBD),$(CONFIG_TARGET_x86_$(subtarget)))),)
+  GRUB2_MODULES += at_keyboard
 endif
 
 ifneq ($(CONFIG_X86_GRUB_SERIAL),)
