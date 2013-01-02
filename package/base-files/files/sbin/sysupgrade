@@ -12,6 +12,7 @@ export DELAY=
 export CONF_IMAGE=
 export CONF_BACKUP=
 export CONF_RESTORE=
+export NEED_IMAGE=
 export HELP=0
 export FORCE=0
 
@@ -24,8 +25,8 @@ while [ -n "$1" ]; do
 		-q) export VERBOSE="$(($VERBOSE - 1))";;
 		-n) export SAVE_CONFIG=0;;
 		-c) export SAVE_OVERLAY=1;;
-		-b|--create-backup) export CONF_BACKUP="$2"; shift;;
-		-r|--restore-backup) export CONF_RESTORE="$2"; shift;;
+		-b|--create-backup) export CONF_BACKUP="$2" NEED_IMAGE=1; shift;;
+		-r|--restore-backup) export CONF_RESTORE="$2" NEED_IMAGE=1; shift;;
 		-f) export CONF_IMAGE="$2"; shift;;
 		-F|--force) export FORCE=1;;
 		-h|--help) export HELP=1; break;;
@@ -44,38 +45,41 @@ export CONF_TAR=/tmp/sysupgrade.tgz
 export ARGV="$*"
 export ARGC="$#"
 
-[ -z "$ARGV" -a -z "$CONF_BACKUP" -o $HELP -gt 0 ] && {
+[ -z "$ARGV" -a -z "$NEED_IMAGE" -o $HELP -gt 0 ] && {
 	cat <<EOF
-Usage: $0 [options] <image file or URL>
+Usage: $0 [<upgrade-option>...] <image file or URL>
+       $0 [-q] [-i] <backup-command> <file>
 
-Options:
+upgrade-option:
 	-d <delay>   add a delay before rebooting
 	-f <config>  restore configuration from .tar.gz (file or url)
 	-i           interactive mode
 	-c           attempt to preserve all changed files in /etc/
-	-b / --create-backup <file>
-	             create .tar.gz of files specified in sysupgrade.conf
-	             then exit. Does not flash an image. If file is '-',
-	             i.e. stdout, verbosity is set to 0 (i.e. quiet).
-	-r / --restore-backup <file>
-	             restore a .tar.gz created with sysupgrade -b
-	             then exit. Does not flash an image. If file is '-',
-	             the archive is read from stdin.
 	-n           do not save configuration over reflash
-	-F / --force
+	-F | --force
 	             Flash image even if image checks fail, this is dangerous!
 	-q           less verbose
 	-v           more verbose
-	-h / --help  display this help
+	-h | --help  display this help
+
+backup-command:
+	-b | --create-backup <file>
+	             create .tar.gz of files specified in sysupgrade.conf
+	             then exit. Does not flash an image. If file is '-',
+	             i.e. stdout, verbosity is set to 0 (i.e. quiet).
+	-r | --restore-backup <file>
+	             restore a .tar.gz created with sysupgrade -b
+	             then exit. Does not flash an image. If file is '-',
+	             the archive is read from stdin.
 
 EOF
 	exit 1
 }
 
-[ -n "$ARGV" -a -n "$CONF_BACKUP" ] && {
+[ -n "$ARGV" -a -n "$NEED_IMAGE" ] && {
 	cat <<-EOF
-		-b/--create-backup does not perform a firmware upgrade. Do not
-		specify both -b and a firmware image.
+		-b|--create-backup and -r|--restore-backup do not perform a firmware upgrade.
+		Do not specify both -b|-r and a firmware image.
 	EOF
 	exit 1
 }
