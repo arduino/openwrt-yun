@@ -1,6 +1,6 @@
 --- a/drivers/net/wireless/ath/ath9k/debug.c
 +++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1767,6 +1767,8 @@ int ath9k_init_debug(struct ath_hw *ah)
+@@ -1766,6 +1766,8 @@ int ath9k_init_debug(struct ath_hw *ah)
  			    sc->debug.debugfs_phy, sc, &fops_tx_chainmask);
  	debugfs_create_file("disable_ani", S_IRUSR | S_IWUSR,
  			    sc->debug.debugfs_phy, sc, &fops_disable_ani);
