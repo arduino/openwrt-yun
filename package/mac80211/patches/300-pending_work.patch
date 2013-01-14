@@ -522,15 +522,34 @@
  static DECLARE_WORK(reg_regdb_work, reg_regdb_search);
 --- a/drivers/net/wireless/ath/ath9k/recv.c
 +++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -286,7 +286,6 @@ int ath_rx_init(struct ath_softc *sc, in
+@@ -254,8 +254,6 @@ rx_init_fail:
+ 
+ static void ath_edma_start_recv(struct ath_softc *sc)
+ {
+-	spin_lock_bh(&sc->rx.rxbuflock);
+-
+ 	ath9k_hw_rxena(sc->sc_ah);
+ 
+ 	ath_rx_addbuffer_edma(sc, ATH9K_RX_QUEUE_HP,
+@@ -267,8 +265,6 @@ static void ath_edma_start_recv(struct a
+ 	ath_opmode_init(sc);
+ 
+ 	ath9k_hw_startpcureceive(sc->sc_ah, !!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL));
+-
+-	spin_unlock_bh(&sc->rx.rxbuflock);
+ }
+ 
+ static void ath_edma_stop_recv(struct ath_softc *sc)
+@@ -285,8 +281,6 @@ int ath_rx_init(struct ath_softc *sc, in
+ 	int error = 0;
  
  	spin_lock_init(&sc->sc_pcu_lock);
- 	spin_lock_init(&sc->rx.rxbuflock);
+-	spin_lock_init(&sc->rx.rxbuflock);
 -	clear_bit(SC_OP_RXFLUSH, &sc->sc_flags);
  
  	common->rx_bufsize = IEEE80211_MAX_MPDU_LEN / 2 +
  			     sc->sc_ah->caps.rx_status_len;
-@@ -424,8 +423,8 @@ u32 ath_calcrxfilter(struct ath_softc *s
+@@ -424,8 +418,8 @@ u32 ath_calcrxfilter(struct ath_softc *s
  		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
  
  	if (sc->nvifs > 1 || (sc->rx.rxfilter & FIF_OTHER_BSS)) {
@@ -541,7 +560,20 @@
  			rfilt |= ATH9K_RX_FILTER_PROM;
  		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
  	}
-@@ -473,6 +472,13 @@ start_recv:
+@@ -447,7 +441,6 @@ int ath_startrecv(struct ath_softc *sc)
+ 		return 0;
+ 	}
+ 
+-	spin_lock_bh(&sc->rx.rxbuflock);
+ 	if (list_empty(&sc->rx.rxbuf))
+ 		goto start_recv;
+ 
+@@ -468,26 +461,31 @@ start_recv:
+ 	ath_opmode_init(sc);
+ 	ath9k_hw_startpcureceive(ah, !!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL));
+ 
+-	spin_unlock_bh(&sc->rx.rxbuflock);
+-
  	return 0;
  }
  
@@ -555,7 +587,10 @@
  bool ath_stoprecv(struct ath_softc *sc)
  {
  	struct ath_hw *ah = sc->sc_ah;
-@@ -483,6 +489,8 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 	bool stopped, reset = false;
+ 
+-	spin_lock_bh(&sc->rx.rxbuflock);
+ 	ath9k_hw_abortpcurecv(ah);
  	ath9k_hw_setrxfilter(ah, 0);
  	stopped = ath9k_hw_stopdmarecv(ah, &reset);
  
@@ -564,7 +599,12 @@
  	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
  		ath_edma_stop_recv(sc);
  	else
-@@ -499,15 +507,6 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 		sc->rx.rxlink = NULL;
+-	spin_unlock_bh(&sc->rx.rxbuflock);
+ 
+ 	if (!(ah->ah_flags & AH_UNPLUGGED) &&
+ 	    unlikely(!stopped)) {
+@@ -499,15 +497,6 @@ bool ath_stoprecv(struct ath_softc *sc)
  	return stopped && !reset;
  }
  
@@ -580,7 +620,7 @@
  static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
  {
  	/* Check whether the Beacon frame has DTIM indicating buffered bc/mc */
-@@ -744,6 +743,7 @@ static struct ath_buf *ath_get_next_rx_b
+@@ -744,6 +733,7 @@ static struct ath_buf *ath_get_next_rx_b
  			return NULL;
  	}
  
@@ -588,7 +628,14 @@
  	if (!bf->bf_mpdu)
  		return bf;
  
-@@ -1066,9 +1066,6 @@ int ath_rx_tasklet(struct ath_softc *sc,
+@@ -1059,16 +1049,12 @@ int ath_rx_tasklet(struct ath_softc *sc,
+ 		dma_type = DMA_FROM_DEVICE;
+ 
+ 	qtype = hp ? ATH9K_RX_QUEUE_HP : ATH9K_RX_QUEUE_LP;
+-	spin_lock_bh(&sc->rx.rxbuflock);
+ 
+ 	tsf = ath9k_hw_gettsf64(ah);
+ 	tsf_lower = tsf & 0xffffffff;
  
  	do {
  		bool decrypt_error = false;
@@ -598,7 +645,7 @@
  
  		memset(&rs, 0, sizeof(rs));
  		if (edma)
-@@ -1108,15 +1105,6 @@ int ath_rx_tasklet(struct ath_softc *sc,
+@@ -1108,15 +1094,6 @@ int ath_rx_tasklet(struct ath_softc *sc,
  		sc->rx.num_pkts++;
  		ath_debug_stat_rx(sc, &rs);
  
@@ -614,7 +661,7 @@
  		memset(rxs, 0, sizeof(struct ieee80211_rx_status));
  
  		rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
-@@ -1251,14 +1239,15 @@ requeue_drop_frag:
+@@ -1251,19 +1228,18 @@ requeue_drop_frag:
  			sc->rx.frag = NULL;
  		}
  requeue:
@@ -634,6 +681,11 @@
  		}
  	} while (1);
  
+-	spin_unlock_bh(&sc->rx.rxbuflock);
+-
+ 	if (!(ah->imask & ATH9K_INT_RXEOL)) {
+ 		ah->imask |= (ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
+ 		ath9k_hw_set_interrupts(ah);
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
 @@ -818,23 +818,71 @@ void ieee80211_sta_process_chanswitch(st
@@ -1136,7 +1188,15 @@
  
 --- a/drivers/net/wireless/ath/ath9k/ath9k.h
 +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -324,7 +324,6 @@ struct ath_rx {
+@@ -313,7 +313,6 @@ struct ath_rx {
+ 	u32 *rxlink;
+ 	u32 num_pkts;
+ 	unsigned int rxfilter;
+-	spinlock_t rxbuflock;
+ 	struct list_head rxbuf;
+ 	struct ath_descdma rxdma;
+ 	struct ath_buf *rx_bufptr;
+@@ -324,7 +323,6 @@ struct ath_rx {
  
  int ath_startrecv(struct ath_softc *sc);
  bool ath_stoprecv(struct ath_softc *sc);
@@ -1144,7 +1204,7 @@
  u32 ath_calcrxfilter(struct ath_softc *sc);
  int ath_rx_init(struct ath_softc *sc, int nbufs);
  void ath_rx_cleanup(struct ath_softc *sc);
-@@ -627,7 +626,6 @@ void ath_ant_comb_update(struct ath_soft
+@@ -627,7 +625,6 @@ void ath_ant_comb_update(struct ath_soft
  enum sc_op_flags {
  	SC_OP_INVALID,
  	SC_OP_BEACONS,
