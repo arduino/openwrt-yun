@@ -11,7 +11,7 @@
  	debugfs_create_file("regval", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
 --- a/drivers/net/wireless/ath/ath9k/hw.c
 +++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2521,10 +2521,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw
+@@ -2523,10 +2523,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw
  		pCap->rx_status_len = sizeof(struct ar9003_rxs);
  		pCap->tx_desc_len = sizeof(struct ar9003_txc);
  		pCap->txs_len = sizeof(struct ar9003_txs);
