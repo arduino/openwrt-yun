@@ -500,7 +500,7 @@
  #include <asm/hardware/gic.h>
  #include "core.h"
  #include "devices.h"
-@@ -759,6 +760,10 @@ static int __init laguna_model_setup(voi
+@@ -760,6 +761,10 @@ static int __init laguna_model_setup(voi
  	u8 pcie_bitmap = 0;
  
  	printk("Running on Gateworks Laguna %s\n", laguna_info.model);
