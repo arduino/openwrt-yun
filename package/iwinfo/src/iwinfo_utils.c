@@ -28,7 +28,7 @@ static int ioctl_socket = -1;
 static int iwinfo_ioctl_socket(void)
 {
 	/* Prepare socket */
-	if( ioctl_socket == -1 )
+	if (ioctl_socket == -1)
 	{
 		ioctl_socket = socket(AF_INET, SOCK_DGRAM, 0);
 		fcntl(ioctl_socket, F_SETFD, fcntl(ioctl_socket, F_GETFD) | FD_CLOEXEC);
@@ -82,7 +82,7 @@ int iwinfo_ifup(const char *ifname)
 
 	strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
 
-	if( iwinfo_ioctl(SIOCGIFFLAGS, &ifr) )
+	if (iwinfo_ioctl(SIOCGIFFLAGS, &ifr))
 		return 0;
 
 	ifr.ifr_flags |= (IFF_UP | IFF_RUNNING);
@@ -96,7 +96,7 @@ int iwinfo_ifdown(const char *ifname)
 
 	strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
 
-	if( iwinfo_ioctl(SIOCGIFFLAGS, &ifr) )
+	if (iwinfo_ioctl(SIOCGIFFLAGS, &ifr))
 		return 0;
 
 	ifr.ifr_flags &= ~(IFF_UP | IFF_RUNNING);
@@ -110,7 +110,7 @@ int iwinfo_ifmac(const char *ifname)
 
 	strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
 
-	if( iwinfo_ioctl(SIOCGIFHWADDR, &ifr) )
+	if (iwinfo_ioctl(SIOCGIFHWADDR, &ifr))
 		return 0;
 
 	ifr.ifr_hwaddr.sa_data[1]++;
@@ -121,32 +121,53 @@ int iwinfo_ifmac(const char *ifname)
 
 void iwinfo_close(void)
 {
-	if( ioctl_socket > -1 )
+	if (ioctl_socket > -1)
 		close(ioctl_socket);
+
+	ioctl_socket = -1;
 }
 
 struct iwinfo_hardware_entry * iwinfo_hardware(struct iwinfo_hardware_id *id)
 {
-	const struct iwinfo_hardware_entry *e;
+	FILE *db;
+	char buf[256] = { 0 };
+	static struct iwinfo_hardware_entry e;
 
-	for (e = IWINFO_HARDWARE_ENTRIES; e->vendor_name; e++)
+	if (!(db = fopen(IWINFO_HARDWARE_FILE, "r")))
+		return NULL;
+
+	while (fgets(buf, sizeof(buf) - 1, db) != NULL)
 	{
-		if ((e->vendor_id != 0xffff) && (e->vendor_id != id->vendor_id))
+		memset(&e, 0, sizeof(e));
+
+		if (sscanf(buf, "%hx %hx %hx %hx %hd %hd \"%63[^\"]\" \"%63[^\"]\"",
+			       &e.vendor_id, &e.device_id,
+			       &e.subsystem_vendor_id, &e.subsystem_device_id,
+			       &e.txpower_offset, &e.frequency_offset,
+			       e.vendor_name, e.device_name) < 8)
 			continue;
 
-		if ((e->device_id != 0xffff) && (e->device_id != id->device_id))
+		if ((e.vendor_id != 0xffff) && (e.vendor_id != id->vendor_id))
 			continue;
 
-		if ((e->subsystem_vendor_id != 0xffff) &&
-			(e->subsystem_vendor_id != id->subsystem_vendor_id))
+		if ((e.device_id != 0xffff) && (e.device_id != id->device_id))
 			continue;
 
-		if ((e->subsystem_device_id != 0xffff) &&
-			(e->subsystem_device_id != id->subsystem_device_id))
+		if ((e.subsystem_vendor_id != 0xffff) &&
+			(e.subsystem_vendor_id != id->subsystem_vendor_id))
 			continue;
 
-		return (struct iwinfo_hardware_entry *)e;
+		if ((e.subsystem_device_id != 0xffff) &&
+			(e.subsystem_device_id != id->subsystem_device_id))
+			continue;
+
+		break;
 	}
+
+	fclose(db);
+
+	if (e.device_name[0])
+		return &e;
 
 	return NULL;
 }

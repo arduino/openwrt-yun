@@ -50,11 +50,16 @@ extern const char *IWINFO_AUTH_NAMES[];
 
 
 enum iwinfo_opmode {
-	IWINFO_OPMODE_UNKNOWN = 0,
-	IWINFO_OPMODE_MASTER  = 1,
-	IWINFO_OPMODE_ADHOC   = 2,
-	IWINFO_OPMODE_CLIENT  = 3,
-	IWINFO_OPMODE_MONITOR = 4,
+	IWINFO_OPMODE_UNKNOWN    = 0,
+	IWINFO_OPMODE_MASTER     = 1,
+	IWINFO_OPMODE_ADHOC      = 2,
+	IWINFO_OPMODE_CLIENT     = 3,
+	IWINFO_OPMODE_MONITOR    = 4,
+	IWINFO_OPMODE_AP_VLAN    = 5,
+	IWINFO_OPMODE_WDS        = 6,
+	IWINFO_OPMODE_MESHPOINT  = 7,
+	IWINFO_OPMODE_P2P_CLIENT = 8,
+	IWINFO_OPMODE_P2P_GO     = 9,
 };
 
 extern const char *IWINFO_OPMODE_NAMES[];
@@ -127,8 +132,8 @@ struct iwinfo_hardware_id {
 };
 
 struct iwinfo_hardware_entry {
-	const char *vendor_name;
-	const char *device_name;
+	char vendor_name[64];
+	char device_name[64];
 	uint16_t vendor_id;
 	uint16_t device_id;
 	uint16_t subsystem_vendor_id;
@@ -138,7 +143,8 @@ struct iwinfo_hardware_entry {
 };
 
 extern const struct iwinfo_iso3166_label IWINFO_ISO3166_NAMES[];
-extern const struct iwinfo_hardware_entry IWINFO_HARDWARE_ENTRIES[];
+
+#define IWINFO_HARDWARE_FILE	"/usr/share/libiwinfo/hardware.txt"
 
 
 struct iwinfo_ops {

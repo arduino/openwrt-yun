@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2010-2012 Jo-Philipp Wich <xm@subsignal.org>
+# Copyright (C) 2010-2013 Jo-Philipp Wich <xm@subsignal.org>
 #
 # This is free software, licensed under the GPL 2 license.
 #
@@ -7,7 +7,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libiwinfo
-PKG_RELEASE:=36
+PKG_RELEASE:=43
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 PKG_CONFIG_DEPENDS := \
@@ -39,7 +39,7 @@ define Package/libiwinfo-lua
   SECTION:=lang
   CATEGORY:=Languages
   TITLE:=libiwinfo Lua binding
-  DEPENDS:=+libiwinfo +liblua +lua
+  DEPENDS:=+libiwinfo +liblua
   MAINTAINER:=Jo-Philipp Wich <xm@subsignal.org>
 endef
 
@@ -101,6 +101,8 @@ endef
 define Package/libiwinfo/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/libiwinfo.so $(1)/usr/lib/libiwinfo.so
+	$(INSTALL_DIR) $(1)/usr/share/libiwinfo
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/hardware.txt $(1)/usr/share/libiwinfo/hardware.txt
 endef
 
 define Package/libiwinfo-lua/install
