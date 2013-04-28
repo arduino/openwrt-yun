@@ -1,0 +1,20 @@
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -322,11 +322,17 @@ static int rt2800pci_write_firmware(stru
+ static char *rt2800pci_get_eeprom_file_name(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct rt2x00_platform_data *pdata;
++	struct device_node *np;
++	char *eep;
+ 
+ 	pdata = rt2x00dev->dev->platform_data;
+ 	if (pdata)
+ 		return pdata->eeprom_file_name;
+ 
++	np = rt2x00dev->dev->of_node;
++	if (np && !of_property_read_string(np, "ralink,eeprom", &eep))
++		return eep;
++
+ 	return NULL;
+ }
+ 
