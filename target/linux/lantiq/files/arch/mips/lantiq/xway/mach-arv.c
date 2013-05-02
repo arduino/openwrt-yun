@@ -529,7 +529,6 @@ arv4518pw_init(void)
 	ltq_register_gpio_keys_polled(-1, LTQ_KEYS_POLL_INTERVAL,
 				ARRAY_SIZE(arv4518pw_gpio_keys), arv4518pw_gpio_keys);
 	arv_load_nor(0x400000);
-	ltq_pci_data.gpio = PCI_GNT2 | PCI_REQ2;
 	ltq_register_pci(&ltq_pci_data);
 	xway_register_dwc(ARV4518PW_USB);
 	arv_register_ethernet(ARV4518PW_MAC_ADDR);
