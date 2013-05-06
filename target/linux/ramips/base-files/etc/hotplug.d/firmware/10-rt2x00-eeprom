@@ -62,6 +62,7 @@ case "$FIRMWARE" in
 	carambola | \
 	dir-615-h1 | \
 	dir-620-a1 | \
+	dir-620-d1 | \
 	esr-9753 | \
 	fonera20n | \
 	freestation5 | \

@@ -26,6 +26,7 @@ platform_check_image() {
 	dir-615-h1 | \
 	dir-615-d | \
 	dir-620-a1 | \
+	dir-620-d1 | \
 	dap-1350 | \
 	esr-9753 | \
 	fonera20n | \

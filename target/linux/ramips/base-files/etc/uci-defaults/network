@@ -141,6 +141,7 @@ ramips_setup_macs()
 	3g-6200n | \
 	argus-atp52b | \
 	bc2 | \
+	dir-620-d1 |\
 	f5d8235-v1 | \
 	nw718 | \
 	psr-680w | \

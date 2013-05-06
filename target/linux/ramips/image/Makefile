@@ -231,6 +231,10 @@ define BuildFirmware/DIR620A1
 	$(call BuildFirmware/Generic,$(1),$(2),$(call mkcmdline,$(3),ttyS1,57600) $(call mkmtd/phys,$(mtdlayout_dir620a1)),$(kernel_size_dir620a1),$(rootfs_size_dir620a1),DIR_620)
 endef
 
+define BuildFirmware/DIR620D1
+	$(call BuildFirmware/Generic,$(1),$(2),$(call mkcmdline,$(3),ttyS1,57600) $(call mkmtd/spi,$(mtdlayout_dir620a1)),$(kernel_size_dir620a1),$(rootfs_size_dir620a1),DIR_620D1)
+endef
+
 define BuildFirmware/DIR620A1/initramfs
 	$(call BuildFirmware/Generic/initramfs,$(1),$(2),$(call mkcmdline,$(3),ttyS1,57600) $(call mkmtd/phys,$(mtdlayout_dir620a1)),$(kernel_size_dir620a1),$(rootfs_size_dir620a1))
 endef
@@ -470,7 +474,8 @@ define Image/Build/Profile/DIR300B1
 endef
 
 define Image/Build/Profile/DIR615H1
-        $(call Image/Build/Template/$(fs_squash)/$(1),DIR615H1,dir-615-h1,DIR-615-H1,ttyS1,57600,spi)
+	$(call Image/Build/Template/$(fs_squash)/$(1),DIR615H1,dir-615-h1,DIR-615-H1,ttyS1,57600,spi)
+	$(call Image/Build/Template/$(fs_squash)/$(1),DIR620D1,dir-620-d1,DIR-620-D1,ttyS1,57600,spi)
 endef
 
 define Image/Build/Profile/DAP1350
