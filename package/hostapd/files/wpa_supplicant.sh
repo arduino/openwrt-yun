@@ -106,7 +106,7 @@ wpa_supplicant_setup_vif() {
 					config_get password "$vif" password
 					phase2="phase2=\"auth=${auth:-MSCHAPV2}\""
 					identity="identity=\"$identity\""
-					password="password=\"$password\""
+					password="${password:+password=\"$password\"}"
 				;;
 			esac
 			eap_type="eap=$(echo $eap_type | tr 'a-z' 'A-Z')"
@@ -186,6 +186,9 @@ network={
 	$wep_tx_keyidx
 }
 EOF
-	[ -z "$proto" -a "$key_mgmt" != "NONE" ] || \
+	if [ -n "$proto" -o "$key_mgmt" == "NONE" ]; then
 		wpa_supplicant ${bridge:+ -b $bridge} -B -P "/var/run/wifi-${ifname}.pid" -D ${driver:-wext} -i "$ifname" -c /var/run/wpa_supplicant-$ifname.conf $options
+	else
+		return 0
+	fi
 }
