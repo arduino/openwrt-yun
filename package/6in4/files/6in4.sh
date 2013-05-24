@@ -14,10 +14,10 @@ proto_6in4_setup() {
 	local iface="$2"
 	local link="6in4-$cfg"
 
-	local mtu ttl ipaddr peeraddr ip6addr tunnelid username password
-	json_get_vars mtu ttl ipaddr peeraddr ip6addr tunnelid username password
+	local mtu ttl ipaddr peeraddr ip6addr ip6prefix tunnelid username password
+	json_get_vars mtu ttl ipaddr peeraddr ip6addr ip6prefix tunnelid username password
 
-	[ -z "$ip6addr" -o -z "$peeraddr" ] && {
+	[ -z "$peeraddr" ] && {
 		proto_notify_error "$cfg" "MISSING_ADDRESS"
 		proto_block_restart "$cfg"
 		return
@@ -33,13 +33,17 @@ proto_6in4_setup() {
 		fi
 	}
 
-	local local6="${ip6addr%%/*}"
-	local mask6="${ip6addr##*/}"
-	[[ "$local6" = "$mask6" ]] && mask6=
-
 	proto_init_update "$link" 1
-	proto_add_ipv6_address "$local6" "$mask6"
 	proto_add_ipv6_route "::" 0
+
+	[ -n "$ip6addr" ] && {
+		local local6="${ip6addr%%/*}"
+		local mask6="${ip6addr##*/}"
+		[[ "$local6" = "$mask6" ]] && mask6=
+		proto_add_ipv6_address "$local6" "$mask6"
+	}
+
+	[ -n "$ip6prefix" ] && proto_add_ipv6_prefix "$ip6prefix"
 
 	proto_add_tunnel
 	json_add_string mode sit
@@ -61,8 +65,10 @@ proto_6in4_setup() {
 		local max=3
 
 		while [ $((++try)) -le $max ]; do
-			wget -qO/dev/null "$url" 2>/dev/null && break
-			sleep 1
+			( exec wget -qO/dev/null "$url" 2>/dev/null ) &
+			local pid=$!
+			( sleep 5; kill $pid 2>/dev/null ) &
+			wait $pid && break
 		done
 	}
 }
@@ -77,6 +83,7 @@ proto_6in4_init_config() {
 
 	proto_config_add_string "ipaddr"
 	proto_config_add_string "ip6addr"
+	proto_config_add_string "ip6prefix"
 	proto_config_add_string "peeraddr"
 	proto_config_add_string "tunnelid"
 	proto_config_add_string "username"
