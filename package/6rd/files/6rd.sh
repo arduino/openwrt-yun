@@ -42,9 +42,13 @@ proto_6rd_setup() {
 	local ip6subnet=$(6rdcalc "$ip6prefix/$ip6prefixlen" "$ipaddr/$ip4prefixlen")
 	local ip6addr="${ip6subnet%%::*}::1"
 
+	# Determine the IPv6 prefix
+	local ip6lanprefix="$ip6subnet/$(($ip6prefixlen + 32 - $ip4prefixlen))"
+
 	proto_init_update "$link" 1
 	proto_add_ipv6_address "$ip6addr" "$ip6prefixlen"
-	proto_add_ipv6_route "::" 0 "::$peeraddr"
+	proto_add_ipv6_prefix "$ip6lanprefix"
+	proto_add_ipv6_route "::" 0 "::$peeraddr" 4096
 
 	proto_add_tunnel
 	json_add_string mode sit
