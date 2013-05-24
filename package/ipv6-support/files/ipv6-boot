@@ -1,0 +1,15 @@
+#!/bin/sh /etc/rc.common
+START=11
+STOP=97
+
+start() {
+	# early sysctl to avoid networking races
+	if [ -d /proc/sys/net/ipv6/conf ]; then
+		for i in /proc/sys/net/ipv6/conf/*/accept_ra; do
+			echo 0 > $i
+		done
+
+		echo 1 > /proc/sys/net/ipv6/conf/default/forwarding
+		echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
+	fi
+}
