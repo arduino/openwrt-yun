@@ -1,0 +1,110 @@
+#!/bin/sh
+[ -z "$2" ] && echo "Error: should be run by odhcpc6c" && exit 1
+. /lib/functions.sh
+. /lib/netifd/netifd-proto.sh
+
+setup_interface () {
+	local device="$1"
+	proto_init_update "*" 1
+
+	# Merge RA-DNS
+	for radns in $RA_DNS; do
+		local duplicate=0
+		for dns in $RDNSS; do
+			[ "$radns" = "$dns" ] && duplicate=1
+		done
+		[ "$duplicate" = 0 ] && RDNSS="$RDNSS $radns"
+	done
+
+	for dns in $RDNSS; do
+		proto_add_dns_server "$dns"
+	done
+
+	for domain in $DOMAINS; do
+		proto_add_dns_search "$domain"
+	done
+
+	for prefix in $PREFIXES; do
+		proto_add_ipv6_prefix "$prefix"
+	done
+
+	[ -n "$USERPREFIX" ] && proto_add_ipv6_prefix "$USERPREFIX"
+
+	# Merge addresses
+	for entry in $RA_ADDRESSES; do
+		local duplicate=0
+		local addr="${entry%%/*}"
+		for dentry in $ADDRESSES; do
+			local daddr="${dentry%%/*}"
+			[ "$addr" = "$daddr" ] && duplicate=1
+		done
+		[ "$duplicate" = "0" ] && ADDRESSES="$ADDRESSES $entry"
+	done
+
+	for entry in $ADDRESSES; do
+		local addr="${entry%%/*}"
+		entry="${entry#*/}"
+		local mask="${entry%%,*}"
+		entry="${entry#*,}"
+		local preferred="${entry%%,*}"
+		entry="${entry#*,}"
+		local valid="${entry%%,*}"
+
+		proto_add_ipv6_address "$addr" "$mask" "$preferred" "$valid" 1
+	done
+
+	for entry in $RA_ROUTES; do
+		local addr="${entry%%/*}"
+		entry="${entry#*/}"
+		local mask="${entry%%,*}"
+		entry="${entry#*,}"
+		local gw="${entry%%,*}"
+		entry="${entry#*,}"
+		local valid="${entry%%,*}"
+		entry="${entry#*,}"
+		local metric="${entry%%,*}"
+
+		proto_add_ipv6_route "$addr" "$mask" "$gw" "$metric" "$valid"
+	done
+
+	proto_send_update "$INTERFACE"
+
+	if [ -n "$AFTR_IP " -a -n "$IFACE_DSLITE" ]; then
+uci -q batch <<-EOF >/dev/null
+set network.$IFACE_DSLITE.proto=dslite
+set network.$IFACE_DSLITE.auto=0
+set network.$IFACE_DSLITE.peeraddr=$AFTR_IP
+set network.$IFACE_DSLITE.tunlink=$INTERFACE
+commit network
+EOF
+
+		ifdown "$IFACE_DSLITE"
+		/etc/init.d/network reload
+		ifup "$IFACE_DSLITE"
+	fi
+
+	# TODO: $SNTP_IP $SIP_IP $SNTP_FQDN $SIP_DOMAIN
+}
+
+teardown_interface() {
+	proto_init_update "*" 0
+	proto_send_update "$INTERFACE"
+}
+
+case "$2" in
+	bound)
+		teardown_interface "$1"
+		setup_interface "$1"
+	;;
+	informed|updated|rebound|ra-updated)
+		setup_interface "$1"
+	;;
+	started|stopped|unbound)
+		teardown_interface "$1"
+	;;
+esac
+
+# user rules
+[ -f /etc/odhcp6c.user ] && . /etc/odhcp6c.user
+
+exit 0
