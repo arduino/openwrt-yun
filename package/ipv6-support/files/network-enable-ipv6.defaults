@@ -14,7 +14,7 @@ done
 uci -q batch <<-EOF >/dev/null
 	set network.globals=globals
 	set network.globals.ula_prefix=fd$r1:$r2:$r3::/48
-	set network.lan.ip6assign=64
+	set network.lan.ip6assign=60
 	set network.wan.ipv6=1
 	commit network
 EOF
