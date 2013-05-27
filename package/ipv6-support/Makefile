@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ipv6-support
-PKG_VERSION:=2013-05-23
+PKG_VERSION:=2013-05-27
 PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
@@ -16,8 +16,8 @@ include $(INCLUDE_DIR)/package.mk
 define Package/ipv6-support
   SECTION:=ipv6
   CATEGORY:=IPv6
-  DEPENDS:=+kmod-ipv6 +6relayd +odhcp6c +ip6tables
-  TITLE:=Basic IPv6-support for Customer Edge Routers
+  DEPENDS:=+kmod-ipv6 +ip6tables +6relayd +odhcp6c +6in4 +6rd +6to4 +ds-lite
+  TITLE:=Extended IPv6-support for home routers (meta package)
   MAINTAINER:=Steven Barth <steven@midlink.org>
   PKGARCH:=all
 endef
@@ -35,16 +35,13 @@ endef
 
 define Package/ipv6-support/postinst
 #!/bin/sh
-[ -n "$${IPKG_INSTROOT}" ] || /etc/init.d/ipv6-boot start || true
 [ -n "$${IPKG_INSTROOT}" ] || /etc/uci-defaults/10_network-enable-ipv6 || true
 [ -n "$${IPKG_INSTROOT}" ] || rm -f /etc/uci-defaults/10_network-enable-ipv6 || true
 endef
 
 define Package/ipv6-support/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/network-enable-ipv6.defaults $(1)/etc/uci-defaults/10_network-enable-ipv6
-	$(INSTALL_BIN) ./files/ipv6-boot $(1)/etc/init.d/ipv6-boot
 endef
 
 $(eval $(call BuildPackage,ipv6-support))
