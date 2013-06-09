@@ -1,44 +1,205 @@
 . /usr/share/libubox/jshn.sh
 
+__network_set_cache()
+{
+	if [ -n "$3" ]; then
+		eval "export -- __NETWORK_CV_$1='$3'"
+		__NETWORK_CACHE="${__NETWORK_CACHE:+$__NETWORK_CACHE }__NETWORK_CV_$1"
+	elif json_get_var "__NETWORK_CV_$1" "$2"; then
+		__NETWORK_CACHE="${__NETWORK_CACHE:+$__NETWORK_CACHE }__NETWORK_CV_$1"
+	fi
+}
+
+__network_export()
+{
+	local __v="__NETWORK_CV_$2"
+	eval "export -- \"$1=\${$__v:+\$$__v$3}\"; [ -n \"\${$__v+x}\" ]"
+}
+
+__network_parse_ifstatus()
+{
+	local __iface="$1"
+	local __key="${__iface}"
+	local __tmp
+	local __old_ns
+
+	__network_export __tmp "${__key}__parsed" && return 0
+	__tmp="$(ubus call network.interface."$__iface" status 2>/dev/null)"
+	[ -n "$__tmp" ] || return 1
+
+	json_set_namespace "network" __old_ns
+	json_load "$__tmp"
+
+	__network_set_cache "${__key}__parsed" "" "1"
+
+	for __tmp in "" "_inactive"; do
+
+		__key="${__key}${__tmp}"
+
+		# parse addresses
+		local __family
+		for __family in 4 6; do
+			if json_is_a "ipv${__family}_address" array; then
+
+				json_select "ipv${__family}_address"
+
+				if json_is_a 1 object; then
+
+					json_select 1
+					__network_set_cache "${__key}_address${__family}" address
+					__network_set_cache "${__key}_mask${__family}"    mask
+					json_select ".."
+
+				fi
+
+				json_select ".."
+
+			fi
+		done
+
+		# parse prefixes
+		if json_is_a "ipv6_prefix" array; then
+			json_select "ipv6_prefix"
+
+			if json_is_a 1 object; then
+				json_select 1
+				__network_set_cache "${__key}_prefix6_address"	address
+				__network_set_cache "${__key}_prefix6_mask"	mask
+				json_select ".."
+			fi
+
+			json_select ".."
+		fi
+
+		# parse routes
+		if json_is_a route array; then
+
+			json_select "route"
+
+			local __idx=1
+			while json_is_a "$__idx" object; do
+
+				json_select "$((__idx++))"
+				json_get_var __tmp table
+
+				if [ -z "$__tmp" ]; then
+					json_get_var __tmp target
+
+					case "${__tmp}" in
+						0.0.0.0)
+							__network_set_cache "${__key}_gateway4" nexthop
+						;;
+						::)
+							__network_set_cache "${__key}_gateway6" nexthop
+						;;
+					esac
+				fi
+
+				json_select ".."
+
+			done
+
+			json_select ".."
+
+		fi
+
+		# parse dns info
+		local __field
+		for __field in "dns_server" "dns_search"; do
+			if json_is_a "$__field" array; then
+
+				json_select "$__field"
+
+				local __idx=1
+				local __dns=""
+
+				while json_is_a "$__idx" string; do
+
+					json_get_var __tmp "$((__idx++))"
+					__dns="${__dns:+$__dns }$__tmp"
+
+				done
+
+				json_select ".."
+
+				if [ -n "$__dns" ]; then
+					__network_set_cache "${__key}_${__field}" "" "$__dns"
+				fi
+			fi
+		done
+
+		# parse up state, device and physdev
+		for __field in "up" "l3_device" "device"; do
+			if json_get_type __tmp "$__field"; then
+				__network_set_cache "${__key}_${__field}" "$__field"
+			fi
+		done
+
+		# descend into inactive table
+		json_is_a "inactive" object && json_select "inactive"
+
+	done
+
+	json_cleanup
+	json_set_namespace "$__old_ns"
+
+	return 0
+}
+
+
 __network_ipaddr()
 {
 	local __var="$1"
 	local __iface="$2"
 	local __family="$3"
-	local __prefix="${4:-0}"
+	local __prefix="$4"
+	local __tmp
 
-	local __tmp="$(ubus call network.interface."$__iface" status 2>/dev/null)"
+	__network_parse_ifstatus "$__iface" || return 1
 
-	json_load "${__tmp:-{}}"
-	json_get_type __tmp "ipv${__family}_address"
-
-	if [ "$__tmp" = array ]; then
-
-		json_select "ipv${__family}_address"
-		json_get_type __tmp 1
-
-		if [ "$__tmp" = object ]; then
-
-			json_select 1
-			json_get_var $__var address
-
-			[ $__prefix -gt 0 ] && {
-				json_get_var __tmp mask
-				eval "export -- \"$__var=\${$__var}/$__tmp\""
-			}
-
-			return 0
-		fi
+	if [ $__prefix -eq 1 ]; then
+		__network_export __tmp "${__iface}_mask${__family}" && \
+			__network_export "$__var" "${__iface}_address${__family}" "/$__tmp"
+		return $?
 	fi
 
-	return 1
+	__network_export "$__var" "${__iface}_address${__family}"
+	return $?
+
 }
 
+# determine IPv4 address of given logical interface
+# 1: destination variable
+# 2: interface
 network_get_ipaddr()  { __network_ipaddr "$1" "$2" 4 0; }
+
+# determine IPv6 address of given logical interface
+# 1: destination variable
+# 2: interface
 network_get_ipaddr6() { __network_ipaddr "$1" "$2" 6 0; }
 
+# determine IPv4 subnet of given logical interface
+# 1: destination variable
+# 2: interface
 network_get_subnet()  { __network_ipaddr "$1" "$2" 4 1; }
+
+# determine IPv6 subnet of given logical interface
+# 1: destination variable
+# 2: interface
 network_get_subnet6() { __network_ipaddr "$1" "$2" 6 1; }
+
+# determine IPv6 prefix
+network_get_prefix6() {
+	local __var="$1"
+	local __iface="$2"
+	local __address
+	local __mask
+
+	__network_parse_ifstatus "$__iface" || return 1
+	__network_export __mask "${__iface}_prefix6_mask" || return 1
+	__network_export "$__var" "${__iface}_prefix6_address" "/$__mask"
+	return $?
+}
 
 
 __network_gateway()
@@ -46,80 +207,75 @@ __network_gateway()
 	local __var="$1"
 	local __iface="$2"
 	local __family="$3"
+	local __inactive="$4"
 
-	local __tmp="$(ubus call network.interface."$__iface" status 2>/dev/null)"
-	local __idx=1
+	__network_parse_ifstatus "$__iface" || return 1
 
-	json_load "${__tmp:-{}}"
-
-	if json_get_type __tmp route && [ "$__tmp" = array ]; then
-
-		json_select route
-
-		while json_get_type __tmp "$__idx" && [ "$__tmp" = object ]; do
-
-			json_select "$((__idx++))"
-			json_get_var __tmp target
-
-			case "${__family}/${__tmp}" in
-				4/0.0.0.0|6/::)
-					json_get_var "$__var" nexthop
-					return $?
-				;;
-			esac
-
-			json_select ".."
-
-		done
+	if [ "$__inactive" = 1 -o "$__inactive" = "true" ]; then
+		__network_export "$__var" "${__iface}_inactive_gateway${__family}" && \
+			return 0
 	fi
 
-	return 1
+	__network_export "$__var" "${__iface}_gateway${__family}"
+	return $?
 }
 
-network_get_gateway()  { __network_gateway "$1" "$2" 4; }
-network_get_gateway6() { __network_gateway "$1" "$2" 6; }
+# determine IPv4 gateway of given logical interface
+# 1: destination variable
+# 2: interface
+# 3: consider inactive gateway if "true" (optional)
+network_get_gateway()  { __network_gateway "$1" "$2" 4 "${3:-0}"; }
+
+# determine  IPv6 gateway of given logical interface
+# 1: destination variable
+# 2: interface
+# 3: consider inactive gateway if "true" (optional)
+network_get_gateway6() { __network_gateway "$1" "$2" 6 "${3:-0}"; }
 
 
 __network_dns() {
 	local __var="$1"
 	local __iface="$2"
 	local __field="$3"
+	local __inactive="$4"
 
-	local __tmp="$(ubus call network.interface."$__iface" status 2>/dev/null)"
-	local __dns=""
-	local __idx=1
+	__network_parse_ifstatus "$__iface" || return 1
 
-	json_load "${__tmp:-{}}"
-
-	if json_get_type __tmp "$__field" && [ "$__tmp" = array ]; then
-
-		json_select "$__field"
-
-		while json_get_type __tmp "$__idx" && [ "$__tmp" = string ]; do
-
-			json_get_var __tmp "$((__idx++))"
-			__dns="${__dns:+$__dns }$__tmp"
-
-		done
+	if [ "$__inactive" = 1 -o "$__inactive" = "true" ]; then
+		__network_export "$__var" "${__iface}_inactive_${__field}" && \
+			return 0
 	fi
 
-	eval "export -- \"$__var=$__dns\""
-	[ -n "$__dns" ]
+	__network_export "$__var" "${__iface}_${__field}"
+	return $?
 }
 
-network_get_dnsserver() { __network_dns "$1" "$2" dns_server; }
-network_get_dnssearch() { __network_dns "$1" "$2" dns_search; }
+# determine the DNS servers of the given logical interface
+# 1: destination variable
+# 2: interface
+# 3: consider inactive servers if "true" (optional)
+network_get_dnsserver() { __network_dns "$1" "$2" dns_server "${3:-0}"; }
+
+# determine the domains of the given logical interface
+# 1: destination variable
+# 2: interface
+# 3: consider inactive domains if "true" (optional)
+network_get_dnssearch() { __network_dns "$1" "$2" dns_search "${3:-0}"; }
 
 
-__network_wan() {
+__network_wan()
+{
 	local __var="$1"
 	local __family="$2"
+	local __inactive="$3"
 	local __iface
 
 	for __iface in $(ubus list | sed -ne 's/^network\.interface\.//p'); do
-		if __network_gateway "$__var" "$__iface" "$__family"; then
-			eval "export -- \"$__var=$__iface\""
-			return 0
+		if [ "$__iface" != loopback ]; then
+			if __network_gateway "$__var" "$__iface" "$__family" "$__inactive"; then
+				eval "export -- \"$__var=$__iface\""
+				return 0
+			fi
 		fi
 	done
 
@@ -127,8 +283,15 @@ __network_wan() {
 	return 1
 }
 
-network_find_wan()  { __network_wan "$1" 4; }
-network_find_wan6() { __network_wan "$1" 6; }
+# find the logical interface which holds the current IPv4 default route
+# 1: destination variable
+# 2: consider inactive default routes if "true" (optional)
+network_find_wan()  { __network_wan "$1" 4 "${2:-0}"; }
+
+# find the logical interface which holds the current IPv6 default route
+# 1: destination variable
+# 2: consider inactive dafault routes if "true" (optional)
+network_find_wan6() { __network_wan "$1" 6 "${2:-0}"; }
 
 
 __network_device()
@@ -137,20 +300,27 @@ __network_device()
 	local __iface="$2"
 	local __field="$3"
 
-	local __tmp="$(ubus call network.interface."$__iface" status 2>/dev/null)"
-	[ -n "$__tmp" ] || return 1
-
-	json_load "$__tmp"
-	json_get_var "$__var" "$__field"
+	__network_parse_ifstatus "$__iface" || return 1
+	__network_export "$__var" "${__iface}_${__field}"
+	return $?
 }
 
+# test whether the given logical interface is running
+# 1: interface
 network_is_up()
 {
 	local __up
 	__network_device __up "$1" up && [ $__up -eq 1 ]
 }
 
+# determine the layer 3 linux network device of the given logical interface
+# 1: destination variable
+# 2: interface
 network_get_device()  { __network_device "$1" "$2" l3_device; }
+
+# determine the layer 2 linux network device of the given logical interface
+# 1: destination variable
+# 2: interface
 network_get_physdev() { __network_device "$1" "$2" device;    }
 
 
@@ -166,5 +336,19 @@ __network_defer()
 	ubus call network.device set_state "$(json_dump)" 2>/dev/null
 }
 
+# defer netifd actions on the given linux network device
+# 1: device name
 network_defer_device() { __network_defer "$1" 1; }
+
+# continue netifd actions on the given linux network device
+# 1: device name
 network_ready_device() { __network_defer "$1" 0; }
+
+# flush the internal value cache to force re-reading values from ubus
+network_flush_cache()
+{
+	local __tmp
+	for __tmp in $__NETWORK_CACHE __NETWORK_CACHE; do
+		unset "$__tmp"
+	done
+}
