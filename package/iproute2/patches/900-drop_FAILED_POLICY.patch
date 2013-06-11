@@ -1,0 +1,60 @@
+From 4e7dbf76227e8c7be7897dc81def3011f637864d Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Thu, 30 May 2013 11:54:04 +0200
+Subject: [PATCH] add support for dropping with FAILED_POLICY
+
+---
+ include/linux/fib_rules.h |    4 ++++
+ include/linux/rtnetlink.h |    1 +
+ ip/rtm_map.c              |    4 ++++
+ 3 files changed, 9 insertions(+)
+
+Index: iproute2-3.3.0/include/linux/fib_rules.h
+===================================================================
+--- iproute2-3.3.0.orig/include/linux/fib_rules.h	2013-06-10 15:48:46.771045967 +0200
++++ iproute2-3.3.0/include/linux/fib_rules.h	2013-06-10 15:48:46.763045967 +0200
+@@ -64,6 +64,10 @@
+ 	FR_ACT_BLACKHOLE,	/* Drop without notification */
+ 	FR_ACT_UNREACHABLE,	/* Drop with ENETUNREACH */
+ 	FR_ACT_PROHIBIT,	/* Drop with EACCES */
++	FR_ACT_RES8,
++	FR_ACT_RES9,
++	FR_ACT_RES10,
++	FR_ACT_FAILED_POLICY,	/* Drop with EPERM */
+ 	__FR_ACT_MAX,
+ };
+ 
+Index: iproute2-3.3.0/include/linux/rtnetlink.h
+===================================================================
+--- iproute2-3.3.0.orig/include/linux/rtnetlink.h	2013-06-10 15:48:46.771045967 +0200
++++ iproute2-3.3.0/include/linux/rtnetlink.h	2013-06-10 15:48:46.763045967 +0200
+@@ -191,6 +191,7 @@
+ 	RTN_THROW,		/* Not in this table		*/
+ 	RTN_NAT,		/* Translate this address	*/
+ 	RTN_XRESOLVE,		/* Use external resolver	*/
++	RTN_FAILED_POLICY,	/* Source address failed policy */
+ 	__RTN_MAX
+ };
+ 
+Index: iproute2-3.3.0/ip/rtm_map.c
+===================================================================
+--- iproute2-3.3.0.orig/ip/rtm_map.c	2013-06-10 15:48:46.771045967 +0200
++++ iproute2-3.3.0/ip/rtm_map.c	2013-06-10 15:48:46.763045967 +0200
+@@ -49,6 +49,8 @@
+ 		return "nat";
+ 	case RTN_XRESOLVE:
+ 		return "xresolve";
++	case RTN_FAILED_POLICY:
++		return "failed_policy";
+ 	default:
+ 		snprintf(buf, len, "%d", id);
+ 		return buf;
+@@ -84,6 +86,8 @@
+ 		res = RTN_UNICAST;
+ 	else if (strcmp(arg, "throw") == 0)
+ 		res = RTN_THROW;
++	else if (strcmp(arg, "failed_policy") == 0)
++		res = RTN_FAILED_POLICY;
+ 	else {
+ 		res = strtoul(arg, &end, 0);
+ 		if (!end || end == arg || *end || res > 255)
