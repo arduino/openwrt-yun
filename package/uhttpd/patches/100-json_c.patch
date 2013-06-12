@@ -1,0 +1,15 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -62,10 +62,11 @@ ELSE()
+ 	MESSAGE(FATAL_ERROR "Invalid TLS provider option, use none|openssl|cyassl")
+ ENDIF()
+ 
++FIND_LIBRARY(json json-c json)
+ IF(UBUS_SUPPORT)
+ 	ADD_DEFINITIONS(-DHAVE_UBUS)
+ 	ADD_LIBRARY(uhttpd_ubus MODULE uhttpd-ubus.c)
+-	TARGET_LINK_LIBRARIES(uhttpd_ubus ubox ubus json blobmsg_json)
++	TARGET_LINK_LIBRARIES(uhttpd_ubus ubox ubus ${json} blobmsg_json)
+ 	SET(PLUGINS ${PLUGINS} uhttpd_ubus)
+ ENDIF()
+ 
