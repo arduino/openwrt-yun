@@ -390,8 +390,8 @@ enable_atheros() {
 		txpower="${txpower:-$vif_txpower}"
 		[ -z "$txpower" ] || iwconfig "$ifname" txpower "${txpower%%.*}"
 
-		case "$mode" in
-			ap)
+		case "$mode:$enc" in
+			ap:*)
 				config_get_bool isolate "$vif" isolate 0
 				iwpriv "$ifname" ap_bridge "$((isolate^1))"
 
@@ -405,7 +405,7 @@ enable_atheros() {
 					}
 				fi
 			;;
-			wds|sta)
+			wds:*|sta:*)
 				if eval "type wpa_supplicant_setup_vif" 2>/dev/null >/dev/null; then
 					wpa_supplicant_setup_vif "$vif" wext || {
 						echo "enable_atheros($device): Failed to set up wpa_supplicant for interface $ifname" >&2
@@ -415,7 +415,7 @@ enable_atheros() {
 					}
 				fi
 			;;
-			adhoc)
+			adhoc:wep*|adhoc:psk*|adhoc:wpa*)
 				if eval "type wpa_supplicant_setup_vif" 2>/dev/null >/dev/null; then
 					wpa_supplicant_setup_vif "$vif" madwifi || {
 						echo "enable_atheros($device): Failed to set up wpa"
@@ -424,6 +424,7 @@ enable_atheros() {
 						continue
 					}
 				fi
+			;;
 		esac
 	done
 }
