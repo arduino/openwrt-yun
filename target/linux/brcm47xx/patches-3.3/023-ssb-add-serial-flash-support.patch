@@ -495,7 +495,7 @@
  		pr_info("found parallel flash.\n");
 --- a/drivers/ssb/ssb_private.h
 +++ b/drivers/ssb/ssb_private.h
-@@ -192,6 +192,10 @@ extern int ssb_devices_freeze(struct ssb
+@@ -204,6 +204,10 @@ extern int ssb_devices_freeze(struct ssb
  extern int ssb_devices_thaw(struct ssb_freeze_context *ctx);
  
  
@@ -508,7 +508,7 @@
  #ifdef CONFIG_SSB_B43_PCI_BRIDGE
 --- a/include/linux/ssb/ssb_driver_chipcommon.h
 +++ b/include/linux/ssb/ssb_driver_chipcommon.h
-@@ -503,8 +503,10 @@
+@@ -504,8 +504,10 @@
  #define SSB_CHIPCO_FLASHCTL_ST_PP	0x0302		/* Page Program */
  #define SSB_CHIPCO_FLASHCTL_ST_SE	0x02D8		/* Sector Erase */
  #define SSB_CHIPCO_FLASHCTL_ST_BE	0x00C7		/* Bulk Erase */
@@ -521,7 +521,7 @@
  
  /* Status register bits for ST flashes */
  #define SSB_CHIPCO_FLASHSTA_ST_WIP	0x01		/* Write In Progress */
-@@ -585,6 +587,7 @@ struct ssb_chipcommon_pmu {
+@@ -586,6 +588,7 @@ struct ssb_chipcommon_pmu {
  #ifdef CONFIG_SSB_DRIVER_MIPS
  enum ssb_flash_type {
  	SSB_PFLASH,
@@ -529,7 +529,7 @@
  };
  
  struct ssb_pflash {
-@@ -592,6 +595,14 @@ struct ssb_pflash {
+@@ -593,6 +596,14 @@ struct ssb_pflash {
  	u32 window;
  	u32 window_size;
  };
@@ -544,7 +544,7 @@
  #endif /* CONFIG_SSB_DRIVER_MIPS */
  
  struct ssb_chipcommon {
-@@ -605,6 +616,9 @@ struct ssb_chipcommon {
+@@ -609,6 +620,9 @@ struct ssb_chipcommon {
  	enum ssb_flash_type flash_type;
  	union {
  		struct ssb_pflash pflash;
@@ -554,7 +554,7 @@
  	};
  #endif /* CONFIG_SSB_DRIVER_MIPS */
  };
-@@ -666,6 +680,16 @@ extern int ssb_chipco_serial_init(struct
+@@ -671,6 +685,16 @@ extern int ssb_chipco_serial_init(struct
  				  struct ssb_serial_port *ports);
  #endif /* CONFIG_SSB_SERIAL */
  

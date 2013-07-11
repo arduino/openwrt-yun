@@ -1,6 +1,6 @@
 --- a/drivers/bcma/Kconfig
 +++ b/drivers/bcma/Kconfig
-@@ -38,6 +38,11 @@ config BCMA_HOST_SOC
+@@ -39,6 +39,11 @@ config BCMA_HOST_SOC
  	bool
  	depends on BCMA_DRIVER_MIPS
  
@@ -23,9 +23,9 @@
  bcma-$(CONFIG_BCMA_DRIVER_MIPS)		+= driver_mips.o
 --- a/drivers/bcma/bcma_private.h
 +++ b/drivers/bcma/bcma_private.h
-@@ -51,6 +51,11 @@ void bcma_chipco_serial_init(struct bcma
- u32 bcma_pmu_alp_clock(struct bcma_drv_cc *cc);
- u32 bcma_pmu_get_clockcpu(struct bcma_drv_cc *cc);
+@@ -55,6 +55,11 @@ void bcma_chipco_serial_init(struct bcma
+ u32 bcma_pmu_get_alp_clock(struct bcma_drv_cc *cc);
+ u32 bcma_pmu_get_cpu_clock(struct bcma_drv_cc *cc);
  
 +#ifdef CONFIG_BCMA_SFLASH
 +/* driver_chipcommon_sflash.c */
@@ -438,7 +438,7 @@
 +}
 --- a/drivers/bcma/driver_mips.c
 +++ b/drivers/bcma/driver_mips.c
-@@ -185,7 +185,13 @@ static void bcma_core_mips_flash_detect(
+@@ -214,7 +214,13 @@ static void bcma_core_mips_flash_detect(
  	switch (bus->drv_cc.capabilities & BCMA_CC_CAP_FLASHT) {
  	case BCMA_CC_FLASHT_STSER:
  	case BCMA_CC_FLASHT_ATSER:
@@ -455,7 +455,7 @@
  		bcma_info(bus, "found parallel flash.\n");
 --- a/include/linux/bcma/bcma_driver_chipcommon.h
 +++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -435,6 +435,7 @@ struct bcma_chipcommon_pmu {
+@@ -579,6 +579,7 @@ struct bcma_chipcommon_pmu {
  #ifdef CONFIG_BCMA_DRIVER_MIPS
  enum bcma_flash_type {
  	BCMA_PFLASH,
@@ -463,7 +463,7 @@
  };
  
  struct bcma_pflash {
-@@ -443,6 +444,14 @@ struct bcma_pflash {
+@@ -587,6 +588,14 @@ struct bcma_pflash {
  	u32 window_size;
  };
  
@@ -478,7 +478,7 @@
  struct bcma_serial_port {
  	void *regs;
  	unsigned long clockspeed;
-@@ -465,6 +474,9 @@ struct bcma_drv_cc {
+@@ -610,6 +619,9 @@ struct bcma_drv_cc {
  	enum bcma_flash_type flash_type;
  	union {
  		struct bcma_pflash pflash;
@@ -488,9 +488,9 @@
  	};
  
  	int nr_serial_ports;
-@@ -520,4 +532,14 @@ extern void bcma_chipco_regctl_maskset(s
- 				       u32 offset, u32 mask, u32 set);
- extern void bcma_pmu_spuravoid_pllupdate(struct bcma_drv_cc *cc, int spuravoid);
+@@ -680,4 +692,14 @@ extern void bcma_pmu_spuravoid_pllupdate
+ 
+ extern u32 bcma_pmu_get_bus_clock(struct bcma_drv_cc *cc);
  
 +#ifdef CONFIG_BCMA_SFLASH
 +/* Chipcommon sflash support. */
