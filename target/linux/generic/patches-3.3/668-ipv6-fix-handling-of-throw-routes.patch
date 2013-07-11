@@ -1,8 +1,6 @@
-Index: linux-3.3.8/net/ipv6/route.c
-===================================================================
---- linux-3.3.8.orig/net/ipv6/route.c	2013-06-10 20:53:54.233355405 +0200
-+++ linux-3.3.8/net/ipv6/route.c	2013-06-10 20:53:54.225355405 +0200
-@@ -1341,6 +1341,9 @@
+--- a/net/ipv6/route.c
++++ b/net/ipv6/route.c
+@@ -1341,6 +1341,9 @@ int ip6_route_add(struct fib6_config *cf
  		case RTN_PROHIBIT:
  			rt->dst.error = -EACCES;
  			break;
@@ -12,7 +10,7 @@ Index: linux-3.3.8/net/ipv6/route.c
  		default:
  			rt->dst.error = -ENETUNREACH;
  			break;
-@@ -2279,7 +2282,8 @@
+@@ -2279,7 +2282,8 @@ static int rtm_to_fib6_config(struct sk_
  
  	if (rtm->rtm_type == RTN_UNREACHABLE ||
  	    rtm->rtm_type == RTN_BLACKHOLE ||
@@ -22,7 +20,7 @@ Index: linux-3.3.8/net/ipv6/route.c
  		cfg->fc_flags |= RTF_REJECT;
  
  	if (rtm->rtm_type == RTN_LOCAL)
-@@ -2417,6 +2421,9 @@
+@@ -2417,6 +2421,9 @@ static int rt6_fill_node(struct net *net
  		case -EACCES:
  			rtm->rtm_type = RTN_PROHIBIT;
  			break;

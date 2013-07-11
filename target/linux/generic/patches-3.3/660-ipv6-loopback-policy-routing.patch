@@ -1,6 +1,6 @@
 --- a/net/ipv6/route.c
 +++ b/net/ipv6/route.c
-@@ -937,6 +937,8 @@ struct dst_entry * ip6_route_output(struct net *net, const struct sock *sk,
+@@ -899,6 +899,8 @@ struct dst_entry * ip6_route_output(stru
  {
  	int flags = 0;
  

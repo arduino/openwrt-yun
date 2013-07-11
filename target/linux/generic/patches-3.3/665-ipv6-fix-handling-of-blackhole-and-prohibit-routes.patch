@@ -1,8 +1,6 @@
-Index: linux-3.3.8/include/net/ip6_fib.h
-===================================================================
---- linux-3.3.8.orig/include/net/ip6_fib.h	2013-06-10 20:53:49.093355283 +0200
-+++ linux-3.3.8/include/net/ip6_fib.h	2013-06-10 20:53:49.085355283 +0200
-@@ -37,6 +37,7 @@
+--- a/include/net/ip6_fib.h
++++ b/include/net/ip6_fib.h
+@@ -37,6 +37,7 @@ struct fib6_config {
  	int		fc_ifindex;
  	u32		fc_flags;
  	u32		fc_protocol;
@@ -10,11 +8,9 @@ Index: linux-3.3.8/include/net/ip6_fib.h
  
  	struct in6_addr	fc_dst;
  	struct in6_addr	fc_src;
-Index: linux-3.3.8/net/ipv6/route.c
-===================================================================
---- linux-3.3.8.orig/net/ipv6/route.c	2013-06-10 20:53:49.093355283 +0200
-+++ linux-3.3.8/net/ipv6/route.c	2013-06-10 20:53:49.089355283 +0200
-@@ -1333,8 +1333,18 @@
+--- a/net/ipv6/route.c
++++ b/net/ipv6/route.c
+@@ -1333,8 +1333,18 @@ int ip6_route_add(struct fib6_config *cf
  		}
  		rt->dst.output = ip6_pkt_discard_out;
  		rt->dst.input = ip6_pkt_discard;
@@ -34,7 +30,7 @@ Index: linux-3.3.8/net/ipv6/route.c
  		goto install_route;
  	}
  
-@@ -2265,8 +2275,11 @@
+@@ -2265,8 +2275,11 @@ static int rtm_to_fib6_config(struct sk_
  	cfg->fc_src_len = rtm->rtm_src_len;
  	cfg->fc_flags = RTF_UP;
  	cfg->fc_protocol = rtm->rtm_protocol;
@@ -47,7 +43,7 @@ Index: linux-3.3.8/net/ipv6/route.c
  		cfg->fc_flags |= RTF_REJECT;
  
  	if (rtm->rtm_type == RTN_LOCAL)
-@@ -2396,8 +2409,19 @@
+@@ -2396,8 +2409,19 @@ static int rt6_fill_node(struct net *net
  		table = RT6_TABLE_UNSPEC;
  	rtm->rtm_table = table;
  	NLA_PUT_U32(skb, RTA_TABLE, table);
