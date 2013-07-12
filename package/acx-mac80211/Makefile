@@ -18,7 +18,12 @@ PKG_SOURCE_URL:=git://acx100.git.sourceforge.net/gitroot/acx100/acx-mac80211
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_VERSION:=$(PKG_REV)
+PKG_MIRROR_MD5SUM:=8d6bc84239059fd938ff4d989579f622
 PKG_BUILD_DEPENDS:=mac80211
+
+PKG_CONFIG_DEPENDS:= \
+	CONFIG_PACKAGE_MAC80211_DEBUGFS \
+	CONFIG_PACKAGE_MAC80211_MESH \
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -172,8 +177,12 @@ PKG_EXTRA_KCONFIG:= \
 PKG_EXTRA_CFLAGS:= \
 	$(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(PKG_EXTRA_KCONFIG)))) \
 	$(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=y,%,$(filter %=y,$(PKG_EXTRA_KCONFIG)))) \
-
-LINUX_AUTOCONF_FILE:= generated/autoconf.h
+	$(if $(CONFIG_LEDS_TRIGGERS), -DCONFIG_MAC80211_LEDS -DCONFIG_LEDS_TRIGGERS) \
+	$(if $(CONFIG_PACKAGE_MAC80211_DEBUGFS), -DCONFIG_CFG80211_DEBUGFS -DCONFIG_MAC80211_DEBUGFS) \
+	$(if $(CONFIG_PACKAGE_MAC80211_MESH), -DCONFIG_MAC80211_MESH) \
+	-DBACKPORTED_KERNEL_NAME=\\\"$(PKG_SOURCE)\\\" \
+	-DBACKPORTED_KERNEL_VERSION=\\\"$(PKG_SOURCE_VERSION)\\\" \
+	-DBACKPORTS_VERSION=\\\"unknown\\\" \
 
 define Build/Compile
 	$(MAKE) -C "$(LINUX_DIR)" \
@@ -181,11 +190,14 @@ define Build/Compile
 		CROSS_COMPILE="$(TARGET_CROSS)" \
 		SUBDIRS="$(PKG_BUILD_DIR)" \
 		$(PKG_EXTRA_KCONFIG) \
-		EXTRA_CFLAGS="$(PKG_EXTRA_CFLAGS) -DCONFIG_ACX_MAC80211_VERSION=\"KERNEL_VERSION(3,7,0)\"" \
-		LINUXINCLUDE="-I$(STAGING_DIR)/usr/include/mac80211 -I$(LINUX_DIR)/include \
-			-Iarch/$(LINUX_KARCH)/include \
-			-include $(LINUX_AUTOCONF_FILE) \
-			-include linux/compat-2.6.h" \
+		EXTRA_CFLAGS="$(PKG_EXTRA_CFLAGS) -DCONFIG_ACX_MAC80211_VERSION=\"KERNEL_VERSION(3,10,0)\"" \
+		LINUXINCLUDE="-I$(STAGING_DIR)/usr/include/mac80211-backport/uapi -I$(STAGING_DIR)/usr/include/mac80211-backport \
+			-I$(STAGING_DIR)/usr/include/mac80211/uapi -I$(STAGING_DIR)/usr/include/mac80211 \
+			-I$(LINUX_DIR)/include -I$(LINUX_DIR)/include/$(LINUX_UAPI_DIR) \
+			-I$(LINUX_DIR)/include/generated/uapi/ -Iarch/$(LINUX_KARCH)/include \
+			-Iarch/$(LINUX_KARCH)/include/$(LINUX_UAPI_DIR) \
+			-include generated/autoconf.h \
+			-include backport/backport.h " \
 		V="$(V)" \
 		modules
 endef
