@@ -2,7 +2,6 @@
 
 failsafe_ip() {
 	[ -d /proc/switch/eth0 ] && [ "$ifname" = "eth0" ] && {
-		ifconfig eth0 0.0.0.0 down
 		echo "0 1 2 3 4 ${cpu_port:-5u*}" > /proc/switch/eth0/vlan/0/ports
 	}
 	
