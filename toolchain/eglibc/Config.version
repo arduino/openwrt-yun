@@ -1,7 +1,11 @@
+if USE_EGLIBC
+
 config EGLIBC_VERSION
 	string
-	depends on USE_EGLIBC
-	default "2.13" if EGLIBC_VERSION_2_13
-	default "2.14.1" if EGLIBC_VERSION_2_14
 	default "2.15" if EGLIBC_VERSION_2_15
-	default "2.13"
+
+config EGLIBC_VERSION_2_15
+	default y if !TOOLCHAINOPTS
+	bool
+
+endif

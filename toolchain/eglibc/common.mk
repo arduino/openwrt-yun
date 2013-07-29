@@ -15,12 +15,6 @@ PKG_SOURCE_VERSION:=$(PKG_REVISION)
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)-r$(PKG_REVISION)
 PKG_SOURCE:=$(PKG_SOURCE_SUBDIR).tar.bz2
 
-ifneq ($(CONFIG_EGLIBC_VERSION_2_13),)
-  PKG_SOURCE_URL:=svn://svn.eglibc.org/branches/eglibc-2_13
-endif
-ifneq ($(CONFIG_EGLIBC_VERSION_2_14),)
-  PKG_SOURCE_URL:=svn://svn.eglibc.org/branches/eglibc-2_14
-endif
 ifneq ($(CONFIG_EGLIBC_VERSION_2_15),)
   PKG_SOURCE_URL:=svn://svn.eglibc.org/branches/eglibc-2_15
 endif
@@ -57,6 +51,7 @@ EGLIBC_CONFIGURE:= \
 
 export libc_cv_ssp=no
 export ac_cv_header_cpuid_h=yes
+export HOST_CFLAGS := $(HOST_CFLAGS) -idirafter $(CURDIR)/$(PATH_PREFIX)/include
 
 define Host/SetToolchainInfo
 	$(SED) 's,^\(LIBC_TYPE\)=.*,\1=$(PKG_NAME),' $(TOOLCHAIN_DIR)/info.mk
@@ -82,7 +77,9 @@ define Host/Prepare
 	$(call Host/Prepare/Default)
 	ln -snf $(PKG_SOURCE_SUBDIR) $(BUILD_DIR_TOOLCHAIN)/$(PKG_NAME)
 	$(SED) 's,y,n,' $(HOST_BUILD_DIR)/libc/option-groups.defaults
+ifneq ($(CONFIG_EGLIBC_VERSION_2_17),y)
 	ln -sf ../ports $(HOST_BUILD_DIR)/libc/
+endif
 endef
 
 define Host/Clean
