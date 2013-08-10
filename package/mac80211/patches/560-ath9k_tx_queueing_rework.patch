@@ -1,6 +1,6 @@
 --- a/drivers/net/wireless/ath/ath9k/ath9k.h
 +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -137,7 +137,8 @@ int ath_descdma_setup(struct ath_softc *
+@@ -133,7 +133,8 @@ int ath_descdma_setup(struct ath_softc *
  #define ATH_AGGR_ENCRYPTDELIM      10
  /* minimum h/w qdepth to be sustained to maximize aggregation */
  #define ATH_AGGR_MIN_QDEPTH        2
@@ -10,7 +10,7 @@
  
  #define IEEE80211_SEQ_SEQ_SHIFT    4
  #define IEEE80211_SEQ_MAX          4096
-@@ -174,12 +175,6 @@ int ath_descdma_setup(struct ath_softc *
+@@ -170,12 +171,6 @@ int ath_descdma_setup(struct ath_softc *
  
  #define ATH_TX_COMPLETE_POLL_INT	1000
  
@@ -23,7 +23,7 @@
  #define ATH_TXFIFO_DEPTH 8
  struct ath_txq {
  	int mac80211_qnum; /* mac80211 queue number, -1 means not mac80211 Q */
-@@ -212,8 +207,9 @@ struct ath_frame_info {
+@@ -208,8 +203,9 @@ struct ath_frame_info {
  	int framelen;
  	enum ath9k_key_type keytype;
  	u8 keyix;
@@ -34,7 +34,7 @@
  };
  
  struct ath_buf_state {
-@@ -241,6 +237,7 @@ struct ath_buf {
+@@ -237,6 +233,7 @@ struct ath_buf {
  struct ath_atx_tid {
  	struct list_head list;
  	struct sk_buff_head buf_q;
@@ -42,7 +42,7 @@
  	struct ath_node *an;
  	struct ath_atx_ac *ac;
  	unsigned long tx_buf[BITS_TO_LONGS(ATH_TID_MAX_BUFS)];
-@@ -268,6 +265,7 @@ struct ath_node {
+@@ -264,6 +261,7 @@ struct ath_node {
  	u8 mpdudensity;
  
  	bool sleeping;
@@ -50,7 +50,7 @@
  
  #if defined(CPTCFG_MAC80211_DEBUGFS) && defined(CPTCFG_ATH9K_DEBUGFS)
  	struct dentry *node_stat;
-@@ -367,6 +365,7 @@ void ath9k_release_buffered_frames(struc
+@@ -364,6 +362,7 @@ void ath9k_release_buffered_frames(struc
  /********/
  
  struct ath_vif {
