@@ -80,7 +80,7 @@
  	debugfs_create_file("interrupt", S_IRUSR, sc->debug.debugfs_phy, sc,
 --- a/drivers/net/wireless/ath/ath9k/main.c
 +++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1139,7 +1139,7 @@ int ath9k_spectral_scan_config(struct ie
+@@ -1138,7 +1138,7 @@ int ath9k_spectral_scan_config(struct ie
  	return 0;
  }
  
@@ -89,7 +89,7 @@
  {
  	struct ath_softc *sc = hw->priv;
  	struct ath_hw *ah = sc->sc_ah;
-@@ -1195,9 +1195,11 @@ static int ath9k_config(struct ieee80211
+@@ -1194,9 +1194,11 @@ static int ath9k_config(struct ieee80211
  		struct ieee80211_channel *curchan = hw->conf.chandef.chan;
  		enum nl80211_channel_type channel_type =
  			cfg80211_get_chandef_type(&conf->chandef);
@@ -101,7 +101,7 @@
  
  		if (ah->curchan)
  			old_pos = ah->curchan - &ah->channels[0];
-@@ -1233,7 +1235,23 @@ static int ath9k_config(struct ieee80211
+@@ -1232,7 +1234,23 @@ static int ath9k_config(struct ieee80211
  			memset(&sc->survey[pos], 0, sizeof(struct survey_info));
  		}
  

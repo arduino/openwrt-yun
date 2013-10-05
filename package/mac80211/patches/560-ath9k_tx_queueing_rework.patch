@@ -90,7 +90,7 @@
  
 --- a/drivers/net/wireless/ath/ath9k/main.c
 +++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1403,9 +1403,6 @@ static void ath9k_sta_notify(struct ieee
+@@ -1402,9 +1402,6 @@ static void ath9k_sta_notify(struct ieee
  	struct ath_softc *sc = hw->priv;
  	struct ath_node *an = (struct ath_node *) sta->drv_priv;
  
