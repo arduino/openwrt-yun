@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2010-2012 OpenWrt.org
+# Copyright (C) 2010-2013 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=e2fsprogs
-PKG_VERSION:=1.42.4
-PKG_MD5SUM:=b6e296f210d642361b7394437ff0f318
+PKG_VERSION:=1.42.8
+PKG_MD5SUM:=8ef664b6eb698aa6b733df59b17b9ed4
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -29,6 +29,11 @@ HOST_CONFIGURE_ARGS += \
 	--enable-dynamic-e2fsck \
 	--disable-tls \
 	--disable-nls
+
+define Host/Prepare
+	$(call Host/Prepare/Default)
+	rm -rf $(HOST_BUILD_DIR)/doc
+endef
 
 define Host/Install
 	$(Host/Install/Default)
