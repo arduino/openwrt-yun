@@ -6,7 +6,7 @@ all: lxdialog
 # Use reursively expanded variables so we do not call gcc unless
 # we really need to do so. (Do not call gcc as part of make mrproper)
 CFLAGS := $(shell sh check-lxdialog.sh -ccflags)
-LIBS := $(shell sh check-lxdialog.sh -ldflags gcc)
+LIBS := $(shell sh check-lxdialog.sh -ldflags $(CC))
 
 # workaround for OpenBSD, which does not use symlinks to libncurses.so
 OS := $(shell uname -s)
