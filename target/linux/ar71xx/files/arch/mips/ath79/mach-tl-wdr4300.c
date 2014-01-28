@@ -37,6 +37,9 @@
 #define WDR4300_GPIO_BTN_WPS		16
 #define WDR4300_GPIO_BTN_RFKILL		17
 
+#define WDR4300_GPIO_EXTERNAL_LNA0	18
+#define WDR4300_GPIO_EXTERNAL_LNA1	19
+
 #define WDR4300_GPIO_USB1_POWER		22
 #define WDR4300_GPIO_USB2_POWER		21
 
@@ -151,6 +154,13 @@ static void __init wdr4300_setup(void)
 	ath79_register_gpio_keys_polled(-1, WDR4300_KEYS_POLL_INTERVAL,
 					ARRAY_SIZE(wdr4300_gpio_keys),
 					wdr4300_gpio_keys);
+
+	gpio_request_one(WDR4300_GPIO_EXTERNAL_LNA0,
+			 GPIOF_OUT_INIT_HIGH | GPIOF_EXPORT_DIR_FIXED,
+			 "external LNA0");
+	gpio_request_one(WDR4300_GPIO_EXTERNAL_LNA1,
+			 GPIOF_OUT_INIT_HIGH | GPIOF_EXPORT_DIR_FIXED,
+			 "external LNA1");
 
 	ath79_init_mac(tmpmac, mac, -1);
 	ath79_register_wmac(art + WDR4300_WMAC_CALDATA_OFFSET, tmpmac);
