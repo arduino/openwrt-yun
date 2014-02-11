@@ -1,0 +1,66 @@
+diff -Naur u-boot-linino.20130321/include/configs/ap121.h u-boot-linino.20130321.8M/include/configs/ap121.h
+--- u-boot-linino.20130321/include/configs/ap121.h	2013-03-21 17:32:46.640509923 +0800
++++ u-boot-linino.20130321.8M/include/configs/ap121.h	2013-03-21 17:30:22.885527004 +0800
+@@ -11,8 +11,16 @@
+  * FLASH and environment organization
+  *-----------------------------------------------------------------------
+  */
+- 
+-#if (FLASH_SIZE == 4)
++
++/* For 8 MB flash */
++#if (FLASH_SIZE == 8)
++#define CFG_MAX_FLASH_BANKS     1	    /* max number of memory banks */
++#define CFG_MAX_FLASH_SECT      128    /* max number of sectors on one chip */
++#define CFG_FLASH_SECTOR_SIZE   (64*1024)
++#define CFG_FLASH_SIZE          0x00800000 /* Total flash size */
++#define ENABLE_DYNAMIC_CONF 1
++/* For 4 MB flash */
++#elif (FLASH_SIZE == 4)
+ #define CFG_MAX_FLASH_BANKS     1	    /* max number of memory banks */
+ #define CFG_MAX_FLASH_SECT      64    /* max number of sectors on one chip */
+ #define CFG_FLASH_SECTOR_SIZE   (64*1024)
+@@ -71,7 +79,10 @@
+ /* default mtd partition table */
+ #undef MTDPARTS_DEFAULT
+ 
+-#if (FLASH_SIZE == 4)
++#if (FLASH_SIZE == 8)
++#define	CONFIG_BOOTARGS     "console=ttyS0,115200 root=31:02 rootfstype=squashfs init=/sbin/init mtdparts=ar7240-nor0:256k(u-boot),64k(u-boot-env),6464k(rootfs),1280k(uImage),64k(NVRAM),64k(ART)"
++#define MTDPARTS_DEFAULT    "mtdparts=ar7240-nor0:256k(u-boot),64k(u-boot-env),6464k(rootfs),1280k(uImage),64k(NVRAM),64k(ART)"
++#elif (FLASH_SIZE == 4)
+ #define	CONFIG_BOOTARGS     "console=ttyS0,115200 root=31:02 rootfstype=squashfs init=/sbin/init mtdparts=ar7240-nor0:256k(u-boot),64k(u-boot-env),2752k(rootfs),896k(uImage),64k(NVRAM),64k(ART)"
+ #define MTDPARTS_DEFAULT    "mtdparts=ar7240-nor0:256k(u-boot),64k(u-boot-env),2752k(rootfs),896k(uImage),64k(NVRAM),64k(ART)"
+ #else
+@@ -202,7 +213,9 @@
+ #define CFG_ENV_ADDR		0x9f040000
+ #define CFG_ENV_SIZE		0x10000
+ 
+-#if (FLASH_SIZE == 4)
++#if (FLASH_SIZE == 8)
++    #define CONFIG_BOOTCOMMAND "bootm 0x9f6a0000"
++#elif (FLASH_SIZE == 4)
+     #define CONFIG_BOOTCOMMAND "bootm 0x9f300000"
+ #else
+     #ifdef VXWORKS_UBOOT
+@@ -281,7 +294,7 @@
+ #elif defined(VXWORKS_UBOOT)
+ #define CONFIG_COMMANDS	(( CONFIG_CMD_DFL | CFG_CMD_PING | CFG_CMD_NET | CFG_CMD_MII | CFG_CMD_ELF))
+ #else
+-#define CONFIG_COMMANDS	(( CONFIG_CMD_DFL | CFG_CMD_PING | CFG_CMD_NET | CFG_CMD_MII))
++#define CONFIG_COMMANDS	(( CONFIG_CMD_DFL | CFG_CMD_PING | CFG_CMD_NET ))
+ #endif /* #ifndef COMPRESSED_UBOOT */
+ 
+ #define CFG_ATHRS26_PHY  1
+@@ -314,7 +327,10 @@
+ ** NOTE: **This will change with different flash configurations**
+ */
+ 
+-#if (FLASH_SIZE == 4)
++#if (FLASH_SIZE == 8)
++#define WLANCAL                        0xbf7f1000
++#define BOARDCAL                       0xbf7f0000
++#elif (FLASH_SIZE == 4)
+ #define WLANCAL                        0xbf3f1000
+ #define BOARDCAL                       0xbf3f0000
+ #else

@@ -1,0 +1,22 @@
+diff -Naur a/board/ar7240/ap121/ap121.c b/board/ar7240/ap121/ap121.c
+--- a/board/ar7240/ap121/ap121.c	2013-03-31 21:16:42.793364949 +0800
++++ b/board/ar7240/ap121/ap121.c	2013-03-31 21:19:45.893365030 +0800
+@@ -80,8 +80,18 @@
+ 	
+     /* Set HORNET_BOOTSTRAP_STATUS BIT18 to ensure that software can control GPIO26 and GPIO27 */
+     //ar7240_reg_wr (HORNET_BOOTSTRAP_STATUS, (ar7240_reg_rd(HORNET_BOOTSTRAP_STATUS) | (0x1<<18)));
++
++    //Linino enable UART
++    linino_enable_UART();
+ }
+ 
++void linino_enable_UART(void)
++{
++    ar7240_reg_wr(AR7240_GPIO_FUNC, (ar7240_reg_rd(AR7240_GPIO_FUNC) & 0xFBFFFFFF));
++    ar7240_reg_wr(AR7240_GPIO_OE, (ar7240_reg_rd(AR7240_GPIO_OE)|0x600000));
++    ar7240_reg_wr(AR7240_GPIO_OUT, (ar7240_reg_rd(AR7240_GPIO_OUT)|0x600000));
++ }
++
+ int
+ ar7240_mem_config(void)
+ {

@@ -1,0 +1,26 @@
+
+if PACKAGE_uboot-ar71xx-linino
+	
+config COMPRESSED_UBOOT
+	bool
+	prompt "Enable compressed uboot"
+	depends on PACKAGE_uboot-ar71xx-linino
+	default y	
+config HORNET_1_1_WAR
+	bool 
+	prompt "Enable Hornet war"
+	depends on PACKAGE_uboot-ar71xx-linino
+	default y
+
+config NEW_DDR_TAP_CAL
+	bool 
+	prompt "Enable new ddr tap"
+	depends on PACKAGE_uboot-ar71xx-linino
+	default y
+
+config LININO_DDR2
+	bool 
+	prompt "Memory is DDR2"
+	depends on PACKAGE_uboot-ar71xx-linino
+	default y
+endif

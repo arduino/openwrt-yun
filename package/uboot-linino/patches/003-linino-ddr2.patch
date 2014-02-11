@@ -1,0 +1,15 @@
+diff -Naur u-boot-linino.org/Makefile u-boot-linino/Makefile
+--- u-boot-linino.org/Makefile	2013-03-22 15:03:56.718210356 +0800
++++ u-boot-linino/Makefile	2013-03-22 15:03:28.148210356 +0800
+@@ -331,6 +331,11 @@
+ ifeq ($(NEW_DDR_TAP_CAL), 1)
+ 	@echo "#define NEW_DDR_TAP_CAL 1" >>include/config.h
+ endif
++ifeq ($(CONFIG_LININO_DDR2), 1)
++	@echo "#define CONFIG_LININO_DDR2 1" >>include/config.h
++endif
++
++
+ linino_config		    : 	unconfig    hornet_common_config
+ 	@echo "#define FLASH_SIZE $(FLASH_SIZE)" >>include/config.h
+ ifdef BOARD_STRING

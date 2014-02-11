@@ -1,0 +1,114 @@
+diff -Naurd opkg-618.orig//libopkg/opkg.c opkg-618/libopkg/opkg.c
+--- opkg-618.orig//libopkg/opkg.c	2013-05-22 15:20:47.000000000 +0200
++++ opkg-618/libopkg/opkg.c	2013-05-22 15:40:53.000000000 +0200
+@@ -623,7 +623,7 @@
+ 				opkg_msg(ERROR, "Couldn't retrieve %s\n", url);
+ 			} else {
+ 				int err;
+-				err = opkg_verify_file(list_file_name,
++				err = opkg_verify_file(src, list_file_name,
+ 						     sig_file_name);
+ 				if (err == 0) {
+ 					opkg_msg(INFO, "Signature check "
+diff -Naurd opkg-618.orig//libopkg/opkg_cmd.c opkg-618/libopkg/opkg_cmd.c
+--- opkg-618.orig//libopkg/opkg_cmd.c	2013-05-22 15:20:47.000000000 +0200
++++ opkg-618/libopkg/opkg_cmd.c	2013-05-22 15:41:07.000000000 +0200
+@@ -190,7 +190,7 @@
+                   failures++;
+                   opkg_msg(NOTICE, "Signature check failed.\n");
+               } else {
+-                  err = opkg_verify_file (list_file_name, tmp_file_name);
++                  err = opkg_verify_file (src, list_file_name, tmp_file_name);
+                   if (err == 0)
+                       opkg_msg(NOTICE, "Signature check passed.\n");
+                   else
+diff -Naurd opkg-618.orig//libopkg/opkg_download.c opkg-618/libopkg/opkg_download.c
+--- opkg-618.orig//libopkg/opkg_download.c	2013-05-22 15:40:05.000000000 +0200
++++ opkg-618/libopkg/opkg_download.c	2013-05-22 15:45:36.000000000 +0200
+@@ -340,7 +340,7 @@
+ }
+ 
+ int
+-opkg_verify_file (char *text_file, char *sig_file)
++opkg_verify_file (pkg_src_t *src, char *text_file, char *sig_file)
+ {
+ #if defined HAVE_GPGME
+     int status = -1;
+@@ -348,12 +348,14 @@
+     gpgme_ctx_t ctx;
+     int have_ctx = 0;
+     gpgme_data_t sig, text, key;
+-    int have_sig = 0, have_text = 0, have_key = 0;
++    int have_sig = 0, have_key = 0;
+     gpgme_error_t err;
+     gpgme_verify_result_t result;
+     gpgme_signature_t s;
+     gpgme_protocol_t protocol = GPGME_PROTOCOL_OpenPGP;
+     char *trusted_path = NULL;
++    FILE *fp = NULL, *fp_c = NULL;
++    int pid;
+ 
+     if (conf->check_signature == 0 )
+         return 0;
+@@ -405,12 +407,20 @@
+     }
+     have_sig = 1;
+ 
+-    err = gpgme_data_new_from_file (&text, text_file, 1);
++    fp = fopen(text_file, "r");
++    if (fp && src && src->gzip) {
++	fp_c = fp;
++	fp = gz_open(fp_c, &pid);
++    }
++    if (fp == NULL) {
++	opkg_msg(ERROR, "Unable to open %s", text_file);
++	goto out_err;
++    }
++    err = gpgme_data_new_from_stream (&text, fp);
+     if (err) {
+ 	opkg_msg(ERROR, "Unable to get data from file %s: %s\n", text_file, gpg_strerror(err));
+ 	goto out_err;
+     }
+-    have_text = 1;
+ 
+     err = gpgme_op_verify (ctx, sig, text, NULL);
+     if (err) {
+@@ -438,8 +448,12 @@
+ out_err:
+     if (have_sig)
+ 	gpgme_data_release (sig);
+-    if (have_text)
+-	gpgme_data_release (text);
++    if (fp)
++	fclose(fp);
++    if (fp_c) {
++	fclose(fp_c);
++	gz_close(pid);
++    }
+     if (have_key)
+ 	gpgme_data_release (key);
+     if (trusted_path)
+diff -Naurd opkg-618.orig//libopkg/opkg_download.h opkg-618/libopkg/opkg_download.h
+--- opkg-618.orig//libopkg/opkg_download.h	2011-04-07 17:03:54.000000000 +0200
++++ opkg-618/libopkg/opkg_download.h	2013-05-22 15:41:40.000000000 +0200
+@@ -32,7 +32,7 @@
+  */
+ int opkg_prepare_url_for_install(const char *url, char **namep);
+ 
+-int opkg_verify_file (char *text_file, char *sig_file);
++int opkg_verify_file (pkg_src_t *src, char *text_file, char *sig_file);
+ #ifdef HAVE_CURL
+ void opkg_curl_cleanup(void);
+ #endif
+diff -Naurd opkg-618.orig//libopkg/opkg_install.c opkg-618/libopkg/opkg_install.c
+--- opkg-618.orig//libopkg/opkg_install.c	2013-05-22 15:20:47.000000000 +0200
++++ opkg-618/libopkg/opkg_install.c	2013-05-22 15:41:54.000000000 +0200
+@@ -1303,7 +1303,7 @@
+ 
+        if (file_exists (sig_file_name))
+        {
+-         if (opkg_verify_file (list_file_name, sig_file_name)){
++         if (opkg_verify_file (pkg->src, list_file_name, sig_file_name)){
+            opkg_msg(ERROR, "Failed to verify the signature of %s.\n",
+                            list_file_name);
+            return -1;

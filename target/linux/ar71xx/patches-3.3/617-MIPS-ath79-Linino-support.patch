@@ -1,0 +1,44 @@
+diff -Naur a/arch/mips/ath79/Kconfig b/arch/mips/ath79/Kconfig
+--- a/arch/mips/ath79/Kconfig	2013-03-21 23:58:04.641431865 +0800
++++ b/arch/mips/ath79/Kconfig	2013-03-24 00:08:47.067969507 +0800
+@@ -708,6 +708,18 @@
+ 	select ATH79_DEV_M25P80
+ 	select ATH79_DEV_WMAC
+ 
++config ATH79_MACH_Yun
++	bool "Arduino Yun"
++	select SOC_AR933X
++	select ATH79_DEV_ETH
++	select ATH79_DEV_GPIO_BUTTONS
++	select ATH79_DEV_LEDS_GPIO
++	select ATH79_DEV_M25P80
++	select ATH79_DEV_USB
++	select ATH79_DEV_WMAC
++	help
++	  Say 'Y' here if you want your kernel to support the
++	  Arduino Yun.
+ endmenu
+ 
+ config SOC_AR71XX
+diff -Naur a/arch/mips/ath79/machtypes.h b/arch/mips/ath79/machtypes.h
+--- a/arch/mips/ath79/machtypes.h	2013-03-21 23:58:04.641431865 +0800
++++ b/arch/mips/ath79/machtypes.h	2013-03-24 00:06:23.479076688 +0800
+@@ -129,6 +129,7 @@
+ 	ATH79_MACH_WZR_HP_G450H,	/* Buffalo WZR-HP-G450H */
+ 	ATH79_MACH_ZCN_1523H_2,		/* Zcomax ZCN-1523H-2-xx */
+ 	ATH79_MACH_ZCN_1523H_5,		/* Zcomax ZCN-1523H-5-xx */
++	ATH79_MACH_Yun,			/* Yun */
+ };
+ 
+ #endif /* _ATH79_MACHTYPE_H */
+diff -Naur a/arch/mips/ath79/Makefile b/arch/mips/ath79/Makefile
+--- a/arch/mips/ath79/Makefile	2013-03-21 23:58:04.621435761 +0800
++++ b/arch/mips/ath79/Makefile	2013-03-24 00:08:38.337417852 +0800
+@@ -61,6 +61,7 @@
+ obj-$(CONFIG_ATH79_MACH_JA76PF)		+= mach-ja76pf.o
+ obj-$(CONFIG_ATH79_MACH_JWAP003)	+= mach-jwap003.o
+ obj-$(CONFIG_ATH79_MACH_HORNET_UB)	+= mach-hornet-ub.o
++obj-$(CONFIG_ATH79_MACH_Yun)		+= mach-linino.o
+ obj-$(CONFIG_ATH79_MACH_MR600)		+= mach-mr600.o
+ obj-$(CONFIG_ATH79_MACH_MZK_W04NU)	+= mach-mzk-w04nu.o
+ obj-$(CONFIG_ATH79_MACH_MZK_W300NH)	+= mach-mzk-w300nh.o

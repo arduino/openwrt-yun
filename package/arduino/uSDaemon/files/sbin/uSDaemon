@@ -1,0 +1,73 @@
+#!/bin/sh
+
+# Copyright (C) 2013 DogHunter
+#
+# This is the uSDaemon. It is a little daemon used to automatically discover
+# the uSD card presence in the on-board reader. The default configuration of
+# this daemon *only* look for the specific USB-uSD-reader that is welded at
+# the USB geographical address '1-1.4:1.0'. The user can change the
+# evironment variable 'USBDEVICE' to work with another address. The daemon
+# is limited in this way because external USB devices work with the
+# 'block-mount' package within OpenWRT
+
+. /lib/functions/post_mount.sh
+
+TIME=2
+
+# $1 must be a valid parameter for sleep
+if [ "x$1" != "x" ];then
+	TIME=$1
+fi
+
+DEVICES=""
+
+update_connected_devices()
+{
+	DEVICES=""
+	for sd in `ls -d /sys/bus/scsi/drivers/sd/*/block/sd?`
+	do
+		blkid /dev/$sd_name
+		sd_name=`basename $sd`
+		size=$(cat $sd/size)
+		if [ "$size" != "0" -a "$size" != "" ]
+		then
+			if [ "$DEVICES" == "" ]
+			then
+				DEVICES="$sd_name"
+			else
+				DEVICES="$DEVICES $sd_name"
+			fi
+		fi
+	done
+}
+
+update_connected_devices
+
+umount_disconnected_devices()
+{
+	for sd_name in $DEVICES
+	do
+		# Check the SD device
+		blkid /dev/$sd_name
+		# Check if uSD card is there
+		size=$(cat /sys/bus/scsi/drivers/sd/*/block/$sd_name/size)
+		if [ "$size" == "0" -o "$size" == "" ]; then
+			# If the previous run the uSD was plugged and now size is
+			# 0, it means that the user un-plugged the uSD card so
+			# we can unmount all uSD partitions and mark the device
+			# as disconnected
+			for dev in $(ls /dev/$sd_name?); do
+				umount $dev
+			done
+			rmdir /mnt/$sd_name?
+			post_auto_umount
+		fi
+	done
+}
+
+while [ true ]; do
+	umount_disconnected_devices
+	update_connected_devices
+	sleep $TIME
+done
+

@@ -1,0 +1,60 @@
+--- ./cpu/mips/ar7240/hornet_serial.c.ori	2013-07-06 16:06:25.000000000 +0200
++++ ./cpu/mips/ar7240/hornet_serial.c	2013-07-06 15:48:44.000000000 +0200
+@@ -113,12 +113,15 @@
+ #endif
+ }
+ 
++#define UART_BAUDRATE_COMP_MEGA32U4
++
+ int serial_init(void)
+ {
+     u32 rdata;
+     u32 baudRateDivisor, clock_step;
+     u32 fcEnable = 0; 
+     u32 ahb_freq, ddr_freq, cpu_freq;
++    u32 baud = 250000;
+ 
+     ar7240_sys_frequency(&cpu_freq, &ddr_freq, &ahb_freq);    
+ 
+@@ -134,21 +137,37 @@
+     ar7240_reg_wr(AR7240_GPIO_FUNC, rdata);
+     
+     /* Get reference clock rate, then set baud rate to 115200 */
++    
+ #ifndef CONFIG_HORNET_EMU
+ 
+     rdata = ar7240_reg_rd(HORNET_BOOTSTRAP_STATUS);
+     rdata &= HORNET_BOOTSTRAP_SEL_25M_40M_MASK;
+ 
+     if (rdata)
+-        baudRateDivisor = ( 40000000 / (16*115200) ) - 1; // 40 MHz clock is taken as UART clock        
++        baudRateDivisor = ( 40000000 / (16*baud) ) - 1; // 40 MHz clock is taken as UART clock        
+     else
+-        baudRateDivisor = ( 25000000 / (16*115200) ) - 1; // 25 MHz clock is taken as UART clock	        
++        baudRateDivisor = ( 25000000 / (16*baud) ) - 1; // 25 MHz clock is taken as UART clock	        
+ #else
+-    baudRateDivisor = ( ahb_freq / (16*115200) ) - 1; // 40 MHz clock is taken as UART clock 
++    baudRateDivisor = ( ahb_freq / (16*baud) ) - 1; // 40 MHz clock is taken as UART clock 
+ #endif
+  
+     clock_step = 8192;
+-    
++
++#ifdef UART_BAUDRATE_COMP_MEGA32U4
++        /* Fix timing issues on Atmega32U4 w/16Mhz oscillator */
++        if (baud == 115200) {
++                baudRateDivisor = 0x000C;
++                clock_step  = 0x2000;
++        }
++        if (baud == 250000 || baud == 230400) {
++                baudRateDivisor = 0x0017;
++                clock_step  = 0x7AE0;
++        }
++        if (baud == 500000) {
++                baudRateDivisor = 0x000B;
++                clock_step  = 0x7AE0;
++        }
++#endif
+ 	rdata = UARTCLOCK_UARTCLOCKSCALE_SET(baudRateDivisor) | UARTCLOCK_UARTCLOCKSTEP_SET(clock_step);
+ 	uart_reg_write(UARTCLOCK_ADDRESS, rdata);    
+     
