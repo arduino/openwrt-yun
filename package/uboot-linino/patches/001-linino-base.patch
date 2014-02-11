@@ -1,0 +1,110 @@
+diff -Naur u-boot-linino/board/ar7240/ap121/ap121.c u-boot-linino.20130321/board/ar7240/ap121/ap121.c
+--- u-boot-linino/board/ar7240/ap121/ap121.c	2012-03-09 13:38:00.000000000 +0800
++++ u-boot-linino.20130321/board/ar7240/ap121/ap121.c	2013-03-21 10:45:31.135263510 +0800
+@@ -88,10 +88,15 @@
+ #ifndef COMPRESSED_UBOOT
+     unsigned int tap_val1, tap_val2;
+ #endif
++/*
+ #ifdef CONFIG_HORNET_EMU
+     ar7240_ddr_initial_config_for_fpga();
+ #else
+-    //ar7240_ddr_initial_config(CFG_DDR_REFRESH_VAL);
++    ar7240_ddr_initial_config(CFG_DDR_REFRESH_VAL);  //DDR2
++#endif
++*/
++#ifdef CONFIG_LININO_DDR2
++    ar7240_ddr_initial_config(CFG_DDR_REFRESH_VAL);  //DDR2
+ #endif
+ 
+ /* Default tap values for starting the tap_init*/
+diff -Naur u-boot-linino/cpu/mips/config.mk u-boot-linino.20130321/cpu/mips/config.mk
+--- u-boot-linino/cpu/mips/config.mk	2012-03-09 13:38:10.000000000 +0800
++++ u-boot-linino.20130321/cpu/mips/config.mk	2013-03-21 13:52:00.380946529 +0800
+@@ -21,7 +21,9 @@
+ # MA 02111-1307 USA
+ #
+ v=$(shell \
+-mips-linux-as --version|grep "GNU assembler"|awk '{print $$3}'|awk -F . '{print $$2}')
++$(AS) --version|grep "GNU assembler"|awk '{print $$3}'|awk -F . '{print $$2}')
++#mips-linux-as --version|grep "GNU assembler"|awk '{print $$3}'|awk -F . '{print $$2}')
++#v=22
+ #MIPSFLAGS=$(shell \
+ if [ "$v" -lt "14" ]; then \
+ 	echo "-mcpu=4kc"; \
+@@ -31,10 +33,13 @@
+ 
+ ifneq (,$(findstring 4KCle,$(CROSS_COMPILE)))
+ ENDIANNESS = -EL
+-#else
+-#ENDIANNESS = -EB
++else
++ENDIANNESS = -EB
+ endif
+ 
+-MIPSFLAGS += $(ENDIANNESS) -mabicalls -march=mips32r2
++PLATFORM_CPPFLAGS      += -G 0 -mabicalls -fpic -g
++PLATFORM_CPPFLAGS      += -msoft-float
++PLATFORM_LDFLAGS       += -G 0 -static -n -nostdlib
++MIPSFLAGS += $(ENDIANNESS) -mabicalls -march=mips32r2 -fno-schedule-insns -fno-schedule-insns2
+ 
+ PLATFORM_CPPFLAGS += $(MIPSFLAGS)
+diff -Naur u-boot-linino/include/configs/ap121.h u-boot-linino.20130321/include/configs/ap121.h
+--- u-boot-linino/include/configs/ap121.h	2012-03-09 13:38:13.000000000 +0800
++++ u-boot-linino.20130321/include/configs/ap121.h	2013-03-21 17:32:46.640509923 +0800
+@@ -287,8 +287,8 @@
+ #define CFG_ATHRS26_PHY  1
+ 
+ #define CONFIG_IPADDR   192.168.1.2
+-#define CONFIG_SERVERIP 192.168.1.10
+-#define CONFIG_ETHADDR 0x00:0xaa:0xbb:0xcc:0xdd:0xee
++#define CONFIG_SERVERIP 192.168.1.1
++#define CONFIG_ETHADDR 0xb4:0x21:0x8a:0x00:0x00:0x10
+ #define CFG_FAULT_ECHO_LINK_DOWN    1
+ 
+ 
+diff -Naur u-boot-linino/Makefile u-boot-linino.20130321/Makefile
+--- u-boot-linino/Makefile	2013-03-21 13:20:07.000000000 +0800
++++ u-boot-linino.20130321/Makefile	2013-03-21 13:20:09.194397828 +0800
+@@ -20,6 +20,7 @@
+ # Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ # MA 02111-1307 USA
+ #
++include config.linino
+ 
+ VERSION = 1
+ PATCHLEVEL = 1
+@@ -222,7 +223,8 @@
+ 
+ ifeq ($(COMPRESSED_UBOOT),1)
+ 
+-LZMA = $(BUILD_DIR)/util/lzma
++#LZMA = $(BUILD_DIR)/util/lzma
++LZMA = $(STAGING_DIR)/../host/bin/lzma
+ 
+ tuboot.bin:	System.map bootstrap.bin u-boot.lzimg
+ 		@cat bootstrap.bin > $@
+@@ -334,7 +336,7 @@
+ ifdef BOARD_STRING
+ 	@echo "#define BOARD_STRING 1" >>include/config.h
+ endif
+-	@./mkconfig -a ap121 mips mips ap121 ar7240 ar7240
++	@./mkconfig -a ap121 mips mips ap121 ar7240 ar7240 linino
+ 	
+ #########################################################################
+ #########################################################################
+diff -Naur u-boot-linino/mkconfig u-boot-linino.20130321/mkconfig
+--- u-boot-linino/mkconfig	2012-03-09 13:38:14.000000000 +0800
++++ u-boot-linino.20130321/mkconfig	2013-03-21 11:13:29.655906741 +0800
+@@ -19,9 +19,9 @@
+ done
+ 
+ [ $# -lt 4 ] && exit 1
+-[ $# -gt 6 ] && exit 1
++#[ $# -gt 6 ] && exit 1
+ 
+-echo "Configuring for $1 board..."
++echo "Configuring for $7 board..."
+ 
+ cd ./include
+ 

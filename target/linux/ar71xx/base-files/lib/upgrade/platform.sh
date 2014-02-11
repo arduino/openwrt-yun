@@ -93,7 +93,8 @@ platform_check_image() {
 	db120 | \
 	hornet-ub | \
 	zcn-1523h-2 | \
-	zcn-1523h-5)
+	zcn-1523h-5 | \
+	yun)
 		[ "$magic_long" != "68737173" -a "$magic_long" != "19852003" ] && {
 			echo "Invalid image type."
 			return 1

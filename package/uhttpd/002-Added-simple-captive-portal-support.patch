@@ -1,0 +1,124 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 871dd5e..d2cc545 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -21,7 +21,7 @@ IF(LIBS STREQUAL "LIBS-NOTFOUND")
+ 	SET(LIBS "")
+ ENDIF()
+ 
+-SET(SOURCES main.c listen.c client.c utils.c file.c alias.c auth.c cgi.c relay.c proc.c plugin.c)
++SET(SOURCES main.c listen.c client.c utils.c file.c captive.c alias.c auth.c cgi.c relay.c proc.c plugin.c)
+ IF(TLS_SUPPORT)
+ 	SET(SOURCES ${SOURCES} tls.c)
+ 	ADD_DEFINITIONS(-DHAVE_TLS)
+diff --git a/captive.c b/captive.c
+new file mode 100644
+index 0000000..96e91b9
+--- /dev/null
++++ b/captive.c
+@@ -0,0 +1,34 @@
++
++#include <libubox/blobmsg.h>
++#include "uhttpd.h"
++
++static char *captive_host = NULL;
++static char *captive_url = NULL;
++
++void uh_captive_set_host(const char *host, const char *url) {
++	captive_host = strdup(host);
++	captive_url = strdup(url);
++}
++
++bool uh_captive_check_host(const char *host) {
++	/* Captive host support configured? */
++	if (captive_host==NULL || captive_url==NULL)
++		return false;
++
++	/* Is request sent to the captive host? */
++	if (host!=NULL && !strcmp(host, captive_host))
++		/* yes: proceed normally */
++		return false;
++
++	/* no: must redirect to the correct URL */
++	return true;
++}
++
++bool uh_captive_redirect(struct client *cl) {
++	uh_http_header(cl, 302, "Found");
++	ustream_printf(cl->us, "Content-Length: 0\r\n");
++	ustream_printf(cl->us, "Location: %s\r\n\r\n", captive_url);
++	uh_request_done(cl);
++	return true;
++}
++
+diff --git a/client.c b/client.c
+index 3163afc..12b1fd8 100644
+--- a/client.c
++++ b/client.c
+@@ -319,6 +319,8 @@ static void client_parse_header(struct client *cl, char *data)
+ 			r->ua = UH_UA_GECKO;
+ 		else if (strstr(val, "Konqueror"))
+ 			r->ua = UH_UA_KONQUEROR;
++	} else if (!strcmp(data, "host")) {
++		r->captive_redirect = uh_captive_check_host(val);
+ 	}
+ 
+ 
+diff --git a/file.c b/file.c
+index 8ff2c97..6b370c4 100644
+--- a/file.c
++++ b/file.c
+@@ -805,6 +805,12 @@ void uh_handle_request(struct client *cl)
+ 	char *orig_url = blobmsg_data(blob_data(cl->hdr.head));
+ 	char *error_handler;
+ 
++	/* Captive portal */
++	if (req->captive_redirect) {
++		uh_captive_redirect(cl);
++		return;
++	}
++
+ 	/* Aliasing */
+ 	uh_alias_transform(orig_url, url, 1024);
+ 
+diff --git a/main.c b/main.c
+index 6b1830c..30edc86 100644
+--- a/main.c
++++ b/main.c
+@@ -79,6 +79,13 @@ static void uh_config_parse(void)
+ 				continue;
+ 
+ 			uh_alias_add(strdup(col1), strdup(col2));
++		} else if (!strncmp(line, "C:", 2)) {
++			if (!(col1 = strchr(line, ':')) || (*col1++ = 0) ||
++				!(col2 = strchr(col1, ':')) || (*col2++ = 0) ||
++				!(eol = strchr(col2, '\n')) || (*eol++  = 0))
++				continue;
++
++			uh_captive_set_host(strdup(col1), strdup(col2));
+ 		} else if (!strncmp(line, "I:", 2)) {
+ 			if (!(col1 = strchr(line, ':')) || (*col1++ = 0) ||
+ 				!(eol = strchr(col1, '\n')) || (*eol++  = 0))
+diff --git a/uhttpd.h b/uhttpd.h
+index 0fe7be4..af24b35 100644
+--- a/uhttpd.h
++++ b/uhttpd.h
+@@ -110,6 +110,7 @@ struct http_request {
+ 	bool connection_close;
+ 	uint8_t transfer_chunked;
+ 	const struct auth_realm *realm;
++	bool captive_redirect;
+ };
+ 
+ enum client_state {
+@@ -276,6 +277,10 @@ void client_poll_post_data(struct client *cl);
+ void uh_client_read_cb(struct client *cl);
+ void uh_client_notify_state(struct client *cl);
+ 
++void uh_captive_set_host(const char *host, const char *url);
++bool uh_captive_check_host(const char *host);
++bool uh_captive_redirect(struct client *cl);
++
+ void uh_alias_add(const char *from, const char *to);
+ bool uh_alias_transform(const char *url, char *dest, int dest_l);
+ 

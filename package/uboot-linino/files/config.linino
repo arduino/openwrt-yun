@@ -1,0 +1,10 @@
+# Hsiang ++ for Linino_AR9331 20130319
+#export BUILD_DIR =`pwd`
+#export STAGING_DIR=/home/dio/openwrt/trunk/staging_dir
+#export COMPRESSED_UBOOT=1
+#export CONFIG_HORNET_1_1_WAR=1
+#export NEW_DDR_TAP_CAL=1
+export FLASH_SIZE=16
+export CONFIG_HORNET_XTAL=25
+#export CONFIG_LININO_DDR2=1
+# end 20130319

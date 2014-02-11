@@ -9,17 +9,20 @@ include $(INCLUDE_DIR)/kernel.mk
 include $(INCLUDE_DIR)/version.mk
 
 PKG_NAME:=opkg
-PKG_REV:=9c97d5ecd795709c8584e972bfdf3aee3a5b846d
+PKG_REV:=618
 PKG_VERSION:=$(PKG_REV)
-PKG_RELEASE:=3
+PKG_RELEASE:=3.dh1
 
-PKG_SOURCE_PROTO:=git
+PKG_SOURCE_PROTO:=svn
 PKG_SOURCE_VERSION:=$(PKG_REV)
 PKG_SOURCE_SUBDIR:=opkg-$(PKG_VERSION)
-PKG_SOURCE_URL:=http://git.yoctoproject.org/git/opkg
+PKG_SOURCE_URL:=http://opkg.googlecode.com/svn/trunk/
 PKG_SOURCE:=$(PKG_SOURCE_SUBDIR).tar.gz
 PKG_FIXUP:=autoreconf
 PKG_REMOVE_FILES = autogen.sh aclocal.m4
+
+PKG_LICENSE:=GPLv2
+PKG_LICENSE_FILES:=COPYING
 
 PKG_BUILD_PARALLEL:=1
 HOST_BUILD_PARALLEL:=1
@@ -34,6 +37,7 @@ define Package/opkg
   TITLE:=opkg package management system
   MAINTAINER:=Jo-Philipp Wich <xm@subsignal.org>
   URL:=http://wiki.openmoko.org/wiki/Opkg
+  DEPENDS+= +libgpgme
 endef
 
 define Package/opkg/description
@@ -56,7 +60,7 @@ EXTRA_CFLAGS += $(TARGET_CPPFLAGS)
 
 CONFIGURE_ARGS += \
 	--disable-curl \
-	--disable-gpg \
+	--enable-gpg \
 	--with-opkgetcdir=/etc \
 	--with-opkglockfile=/var/lock/opkg.lock
 
@@ -67,12 +71,19 @@ MAKE_FLAGS = \
 		LDFLAGS="-Wl,--gc-sections" \
 
 define Package/opkg/install
+	$(INSTALL_DIR) $(1)/usr/lib
 	$(INSTALL_DIR) $(1)/usr/lib/opkg
 	$(INSTALL_DIR) $(1)/bin
 	$(INSTALL_DIR) $(1)/etc
+	$(INSTALL_DIR) $(1)/etc/opkg
 	$(INSTALL_DATA) ./files/opkg.conf $(1)/etc/
+	$(INSTALL_DATA) ./files/secring.gpg $(1)/etc/opkg/
+	$(INSTALL_DATA) ./files/trustdb.gpg $(1)/etc/opkg/
+	$(INSTALL_DATA) ./files/trusted.gpg $(1)/etc/opkg/
 	$(VERSION_SED) $(1)/etc/opkg.conf
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/opkg-cl $(1)/bin/opkg
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/opkg-key $(1)/bin/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libopkg.so.* $(1)/usr/lib/
 endef
 
 define Build/InstallDev

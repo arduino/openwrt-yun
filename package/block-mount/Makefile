@@ -52,6 +52,7 @@ define Package/block-mount/install
 	$(INSTALL_DATA) ./files/fstab.config $(1)/etc/config/fstab
 	$(INSTALL_DIR) $(1)/lib/functions/fsck
 	$(INSTALL_DATA) ./files/mount.sh $(1)/lib/functions/
+	$(INSTALL_DATA) ./files/post_mount.sh $(1)/lib/functions/
 	$(INSTALL_DATA) ./files/fsck.sh $(1)/lib/functions/
 	$(INSTALL_DATA) ./files/block.sh $(1)/lib/functions/
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/block

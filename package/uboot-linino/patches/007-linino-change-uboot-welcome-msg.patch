@@ -1,0 +1,11 @@
+--- ./board/ar7240/ap121/ap121.c.ori	2013-07-06 16:20:09.000000000 +0200
++++ ./board/ar7240/ap121/ap121.c	2013-07-06 16:19:38.000000000 +0200
+@@ -142,7 +142,7 @@
+ int checkboard (char *board_string)
+ {
+ #if (BOARD_STRING == WAPI)
+-    strcpy(board_string, "AP121 (ar9331) U-boot");
++    strcpy(board_string, "Arduino Yun (ar9331) U-boot");
+ #else
+     strcpy(board_string, "AP121-2MB (ar9330) U-boot");
+ #endif
