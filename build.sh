@@ -1,9 +1,15 @@
-#!/bin/sh -ex
-rm -f dl
+#!/bin/bash -ex
+
+if [ -h dl ]; then
+	rm -f dl
+fi
+
 rm -fr staging_dir build_dir bin broken_packages
 make distclean
 
-ln -s $DL_FOLDER dl
+if [ -n "$DL_FOLDER" ] && [ ! -a dl ]; then
+	ln -s $DL_FOLDER dl
+fi
 
 ./scripts/feeds uninstall -a
 rm -rf feeds
