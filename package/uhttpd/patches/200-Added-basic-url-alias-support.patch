@@ -1,0 +1,172 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1692bf4..2ba43c2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -33,7 +33,7 @@ IF(HAVE_SHADOW)
+ 	ADD_DEFINITIONS(-DHAVE_SHADOW)
+ ENDIF()
+ 
+-SET(SOURCES uhttpd.c uhttpd-file.c uhttpd-utils.c)
++SET(SOURCES uhttpd.c uhttpd-file.c uhttpd-utils.c uhttpd-alias.c)
+ FIND_LIBRARY(LIBS crypt)
+ IF(LIBS STREQUAL "LIBS-NOTFOUND")
+ 	SET(LIBS "")
+diff --git a/uhttpd-alias.c b/uhttpd-alias.c
+new file mode 100644
+index 0000000..acb343c
+--- /dev/null
++++ b/uhttpd-alias.c
+@@ -0,0 +1,58 @@
++/*
++ * uhttpd - Tiny single-threaded httpd - Alias handler
++ *
++ *   Copyright (C) 2014 Cristian Maglie <c.maglie@bug.st>
++ *
++ *  Licensed under the Apache License, Version 2.0 (the "License");
++ *  you may not use this file except in compliance with the License.
++ *  You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ *  Unless required by applicable law or agreed to in writing, software
++ *  distributed under the License is distributed on an "AS IS" BASIS,
++ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *  See the License for the specific language governing permissions and
++ *  limitations under the License.
++ */
++
++#include "uhttpd-alias.h"
++#include <libubox/blobmsg.h>
++
++static LIST_HEAD(aliases);
++
++struct url_alias {
++	struct list_head list;
++	const char *from;
++	int from_l;
++	const char *to;
++	int to_l;
++};
++
++void uh_alias_add(const char *from, const char *to) {
++	struct url_alias *alias = malloc(sizeof(struct url_alias));
++	alias->from = strdup(from);
++	alias->from_l = strlen(from);
++	alias->to = strdup(to);
++	alias->to_l = strlen(to);
++
++	list_add_tail(&alias->list, &aliases);
++}
++
++bool uh_alias_transform(const char *url, char *dest, int dest_l) {
++	struct url_alias *alias;
++
++	list_for_each_entry(alias, &aliases, list) {
++		if (strncmp(url, alias->from, alias->from_l) == 0) {
++			snprintf(dest, dest_l, alias->to, url + alias->from_l);
++			dest[dest_l-1] = 0;
++			return true;
++		}
++	}
++
++	// The URL doesn't match any alias, copy as is
++	strncpy(dest, url, dest_l);
++	dest[dest_l-1] = 0;
++	return false;
++}
++
+diff --git a/uhttpd-alias.h b/uhttpd-alias.h
+new file mode 100644
+index 0000000..bfa3813
+--- /dev/null
++++ b/uhttpd-alias.h
+@@ -0,0 +1,29 @@
++/*
++ * uhttpd - Tiny single-threaded httpd - Alias handler
++ *
++ *   Copyright (C) 2014 Cristian Maglie <c.maglie@bug.st>
++ *
++ *  Licensed under the Apache License, Version 2.0 (the "License");
++ *  you may not use this file except in compliance with the License.
++ *  You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ *  Unless required by applicable law or agreed to in writing, software
++ *  distributed under the License is distributed on an "AS IS" BASIS,
++ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *  See the License for the specific language governing permissions and
++ *  limitations under the License.
++ */
++
++#ifndef _UHTTPD_ALIAS_
++#define _UHTTPD_ALIAS_
++
++#include "uhttpd.h"
++
++void uh_alias_add(const char *from, const char *to);
++
++bool uh_alias_transform(const char *url, char *dest, int dest_l);
++
++#endif
++
+diff --git a/uhttpd.c b/uhttpd.c
+index f9ac3db..7f349dc 100644
+--- a/uhttpd.c
++++ b/uhttpd.c
+@@ -19,6 +19,7 @@
+ #include "uhttpd.h"
+ #include "uhttpd-utils.h"
+ #include "uhttpd-file.h"
++#include "uhttpd-alias.h"
+ 
+ #ifdef HAVE_CGI
+ #include "uhttpd-cgi.h"
+@@ -77,6 +78,15 @@ static void uh_config_parse(struct config *conf)
+ 					);
+ 				}
+ 			}
++			else if (!strncmp(line, "A:", 2))
++			{
++				if (!(col1 = strchr(line, ':')) || (*col1++ = 0) ||
++					!(col2 = strchr(col1, ':')) || (*col2++ = 0) ||
++					!(eol = strchr(col2, '\n')) || (*eol++  = 0))
++					continue;
++
++				uh_alias_add(strdup(col1), strdup(col2));
++			}
+ 			else if (!strncmp(line, "I:", 2))
+ 			{
+ 				if (!(col1 = strchr(line, ':')) || (*col1++ = 0) ||
+@@ -300,7 +310,8 @@ static struct http_request * uh_http_header_parse(struct client *cl,
+ 		}
+ 		else
+ 		{
+-			req->url = path;
++			req->orig_url = path;
++			uh_alias_transform(req->orig_url, req->url, sizeof(req->url));
+ 		}
+ 
+ 		/* check version */
+diff --git a/uhttpd.h b/uhttpd.h
+index e4e726b..b2fb3c4 100644
+--- a/uhttpd.h
++++ b/uhttpd.h
+@@ -17,6 +17,7 @@
+  */
+ 
+ #ifndef _UHTTPD_
++#define _UHTTPD_
+ 
+ #define _BSD_SOURCE
+ #define _XOPEN_SOURCE 700
+@@ -144,7 +145,8 @@ struct http_request {
+ 	enum http_method method;
+ 	enum http_version version;
+ 	int redirect_status;
+-	char *url;
++	char *orig_url;
++	char url[512];
+ 	char *headers[UH_LIMIT_HEADERS];
+ 	struct auth_realm *realm;
+ };
