@@ -6,7 +6,7 @@ This is a custom version of OpenWRT, targeted to the Arduino Yún. Some of its c
 
 ### Prerequites
 
-In order to successfully build it, you need to setup a Debian computer with at least 30G of free disk space: we use Debian Wheezy. Using a virtual machine is suggested: you can make one with either VirtualBox or KVM
+In order to successfully build it, you need to setup a [Debian](https://www.debian.org/) computer with at least 30G of free disk space: we use Debian Wheezy. Using a virtual machine is suggested: you can make one with either [VirtualBox](https://www.virtualbox.org/) or [KVM](http://www.linux-kvm.org/page/Main_Pag).
 
 Once the Debian computer is ready, run the following command
 
@@ -20,7 +20,7 @@ apt-get install git subversion build-essential asciidoc \
 
 ### Cloning the repo and setting up a download folder
 
-While building, a lot of software will be downloaded. In order to avoid downloading it each time you run a build, we store it to a separate folder
+While building, a lot of software will be downloaded. In order to avoid downloading it each time you run a build, store it to a separate folder
 
 ```bash
 mkdir -p ~/DOWNLOAD
@@ -34,14 +34,14 @@ git clone git@github.com:arduino/openwrt-yun.git
 
 ### Building
 
-Let's start the build process
+Now start the build process
 
 ```bash
 cd openwrt-yun
 DL_FOLDER=~/DOWNLOAD ./build.sh
 ```
 
-If you have more than one CPU, you can speed up the build by specifying a number of concurrent jobs equal to the number of CPUs plus 1. For example, if you have 4 CPUs, use command `DL_FOLDER=~/DOWNLOAD MAKE_JOBS=5 ./build.sh`
+If you have more than one CPU, you can speed the build process up by specifying a number of concurrent jobs equal to the number of CPUs plus 1. For example, if you have 4 CPUs, use command `DL_FOLDER=~/DOWNLOAD MAKE_JOBS=5 ./build.sh`. If left unspecified, the default value of 2 is used.
 
 ### Recovering
 
