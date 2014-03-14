@@ -15,7 +15,7 @@ apt-get install git subversion build-essential asciidoc \
 	fastjar flex gawk libgtk2.0-dev intltool zlib1g-dev \
 	genisoimage libncurses5-dev libssl-dev ruby sdcc unzip \
 	bison libboost-dev libxml-parser-perl libusb-dev bin86 \
-	bcc sharutils openjdk-7-jdk
+	bcc sharutils openjdk-7-jdk mercurial cvs bzr
 ```
 
 ### Cloning the repo and setting up a download folder
