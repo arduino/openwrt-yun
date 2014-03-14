@@ -8,16 +8,16 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=hostapd
-PKG_VERSION:=20130405
+PKG_VERSION:=20131120
 PKG_RELEASE:=1
-PKG_REV:=f2f66ad7e805218468aa041985dccaf8719c296e
+PKG_REV:=594516b4c28a94ca686b17f1e463dfd6712b75a7
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=git://w1.fi/srv/git/hostap.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_VERSION:=$(PKG_REV)
 PKG_SOURCE_PROTO:=git
-PKG_MIRROR_MD5SUM:=5dff9bc3b8fbd9ef8a66273d5adee5a3
+# PKG_MIRROR_MD5SUM:=4e7c1f97edd7514535056fce54ae053a
 
 PKG_MAINTAINER:=Felix Fietkau <nbd@openwrt.org>
 
@@ -175,6 +175,17 @@ define Package/wpa-supplicant/config
 	source "$(SOURCE)/Config.in"
 endef
 
+define Package/wpa-supplicant-p2p
+  $(Package/wpa-supplicant)
+  TITLE:=WPA Supplicant (with Wi-Fi P2P support)
+  DEPENDS:=$(DRV_DEPENDS)
+  VARIANT:=supplicant-p2p
+endef
+
+define Package/wpa-supplicant-p2p/Description
+  WPA Supplicant (with Wi-Fi P2P support)
+endef
+
 define Package/wpa-supplicant-mini
   $(Package/wpa-supplicant)
   TITLE:=WPA Supplicant (minimal version)
@@ -189,14 +200,13 @@ endef
 define Package/wpa-cli
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=@PACKAGE_wpa-supplicant||PACKAGE_wpad-mini||PACKAGE_wpad
+  DEPENDS:=@PACKAGE_wpa-supplicant||PACKAGE_wpa-supplicant-p2p||PACKAGE_wpad-mini||PACKAGE_wpad
   TITLE:=WPA Supplicant command line interface
 endef
 
 define Package/wpa-cli/Description
   WPA Supplicant control utility
 endef
-
 
 ifneq ($(wildcard $(PKG_BUILD_DIR)/.config_*),$(subst .configured_,.config_,$(STAMP_CONFIGURED)))
   define Build/Configure/rebuild
@@ -210,7 +220,9 @@ endif
 
 define Build/Configure
 	$(Build/Configure/rebuild)
-	$(CP) ./files/hostapd-$(LOCAL_VARIANT).config $(PKG_BUILD_DIR)/hostapd/.config
+	$(if $(wildcard ./files/hostapd-$(LOCAL_VARIANT).config), \
+		$(CP) ./files/hostapd-$(LOCAL_VARIANT).config $(PKG_BUILD_DIR)/hostapd/.config \
+	)
 	$(CP) ./files/wpa_supplicant-$(LOCAL_VARIANT).config $(PKG_BUILD_DIR)/wpa_supplicant/.config
 endef
 
@@ -239,6 +251,7 @@ define Build/RunMake
 		$(TARGET_CONFIGURE_OPTS) \
 		$(DRIVER_MAKEOPTS) \
 		LIBS="$(TARGET_LDFLAGS)" \
+		LIBS_c="" \
 		BCHECK= \
 		$(2)
 endef
@@ -303,14 +316,9 @@ Package/hostapd-mini/install = $(Package/hostapd/install)
 
 ifneq ($(LOCAL_TYPE),supplicant)
   define Package/hostapd-utils/install
-	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/hotplug.d/button
+	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/rc.button
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/hostapd/hostapd_cli $(1)/usr/sbin/
-	$(INSTALL_DATA) ./files/wps-hotplug.sh $(1)/etc/hotplug.d/button/50-wps
-	$(if $(CONFIG_PROCD_INIT),
-		$(INSTALL_DIR) $(1)/etc/rc.button/
-		$(INSTALL_BIN) ./files/wps-hotplug.sh $(1)/etc/rc.button/wps,
-		$(INSTALL_DATA) ./files/wps-hotplug.sh $(1)/etc/hotplug.d/button/50-wps
-	)
+	$(INSTALL_BIN) ./files/wps-hotplug.sh $(1)/etc/rc.button/wps
   endef
 endif
 
@@ -328,6 +336,7 @@ define Package/wpa-supplicant/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/wpa_supplicant/wpa_supplicant $(1)/usr/sbin/
 endef
 Package/wpa-supplicant-mini/install = $(Package/wpa-supplicant/install)
+Package/wpa-supplicant-p2p/install = $(Package/wpa-supplicant/install)
 
 ifneq ($(LOCAL_TYPE),hostapd)
   define Package/wpa-cli/install
@@ -342,5 +351,6 @@ $(eval $(call BuildPackage,wpad))
 $(eval $(call BuildPackage,wpad-mini))
 $(eval $(call BuildPackage,wpa-supplicant))
 $(eval $(call BuildPackage,wpa-supplicant-mini))
+$(eval $(call BuildPackage,wpa-supplicant-p2p))
 $(eval $(call BuildPackage,wpa-cli))
 $(eval $(call BuildPackage,hostapd-utils))
