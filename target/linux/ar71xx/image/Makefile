@@ -157,6 +157,7 @@ define Build/Clean
 endef
 
 
+yun_mtdlayout_8M=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,6464k(rootfs),1280k(kernel),64k(nvram),64k(art),7744k@0x50000(firmware)
 yun_mtdlayout_16M=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,14656k(rootfs),1280k(kernel),64k(nvram),64k(art),15936k@0x50000(firmware)
 alfa_ap96_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,256k(u-boot-env)ro,13312k(rootfs),2048k(kernel),512k(caldata)ro,15360k@0x80000(firmware)
 alfa_mtdlayout_8M=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,6144k(rootfs),1600k(kernel),64k(nvram),64k(art)ro,7744k@0x50000(firmware)
@@ -792,6 +793,7 @@ define Image/Build/YunLzma/initramfs
 	$(call MkuImageLzma/initramfs,$(2),$(3) $(4))
 endef
 
+$(eval $(call SingleProfile,YunLzma,$(fs_64k),YUN_8M,yun-8M,Yun,ttyATH0,250000,$$(yun_mtdlayout_8M),1310720,6619136,RKuImage))
 $(eval $(call SingleProfile,YunLzma,$(fs_64k),YUN_16M,yun-16M,Yun,ttyATH0,250000,$$(yun_mtdlayout_16M),1310720,15007744,RKuImage))
 
 $(eval $(call SingleProfile,ALFA,$(fs_64k),ALFANX,alfa-nx,ALFA-NX,ttyS0,115200,$$(alfa_mtdlayout_8M),1638400,6291456,vmlinux.gz.uImage,pb9x-2.6.31-jffs2))
@@ -931,7 +933,7 @@ $(eval $(call SingleProfile,Zcomax,$(fs_64k),ZCN1523H516,zcn-1523h-5-16,ZCN-1523
 $(eval $(call SingleProfile,ZyXEL,$(fs_64k),NBG_460N_550N_550NH,nbg460n_550n_550nh,NBG460N,ttyS0,115200,NBG-460N))
 
 
-$(eval $(call MultiProfile,Yun,YUN_16M))
+$(eval $(call MultiProfile,Yun,YUN_16M YUN_8M))
 $(eval $(call MultiProfile,AP121,AP121_8M AP121_4M))
 $(eval $(call MultiProfile,EWDORIN, EWDORINAP EWDORINRT))
 $(eval $(call MultiProfile,TEW652BRP,TEW652BRP_FW TEW652BRP_RECOVERY))
