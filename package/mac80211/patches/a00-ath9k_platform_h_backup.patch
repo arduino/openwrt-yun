@@ -1,0 +1,22 @@
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -676,8 +676,7 @@ static int ath9k_init_soc_platform(struc
+ 			return ret;
+ 	}
+ 
+-	if (pdata->tx_gain_buffalo)
+-		ah->config.tx_gain_buffalo = true;
++	ah->config.tx_gain_buffalo = true;
+ 
+ 	return ret;
+ }
+--- a/include/linux/ath9k_platform.h
++++ b/include/linux/ath9k_platform.h
+@@ -33,7 +33,6 @@ struct ath9k_platform_data {
+ 
+ 	bool endian_check;
+ 	bool is_clk_25mhz;
+-	bool tx_gain_buffalo;
+ 	bool disable_2ghz;
+ 	bool disable_5ghz;
+ 
