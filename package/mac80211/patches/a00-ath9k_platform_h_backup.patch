@@ -1,6 +1,6 @@
 --- a/drivers/net/wireless/ath/ath9k/init.c
 +++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -676,8 +676,7 @@ static int ath9k_init_soc_platform(struc
+@@ -678,8 +678,7 @@ static int ath9k_init_soc_platform(struc
  			return ret;
  	}
  
