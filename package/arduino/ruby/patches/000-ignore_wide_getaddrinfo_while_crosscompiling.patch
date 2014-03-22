@@ -1,0 +1,10 @@
+--- a/ext/socket/extconf.rb	2013-02-14 23:20:13.581918676 -0200
++++ b/ext/socket/extconf.rb	2013-02-14 23:21:25.761918667 -0200
+@@ -125,6 +125,7 @@
+ have_type("PADDRINFO", %w[ ws2tcpip.h wspiapi.h ])
+ 
+ getaddr_info_ok = (enable_config("wide-getaddrinfo") && :wide) ||
++  (CROSS_COMPILING && :cross) ||
+   (checking_for("wide getaddrinfo") {try_run(<<EOF)} && :os)
+ #{cpp_include(headers)}
+ #include <stdlib.h>
