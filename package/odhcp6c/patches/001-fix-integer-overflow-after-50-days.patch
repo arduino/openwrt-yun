@@ -1,0 +1,25 @@
+From 5b98f902f616bd9b96a2128587bc6995555a43c1 Mon Sep 17 00:00:00 2001
+From: Steven Barth <steven@midlink.org>
+Date: Fri, 7 Mar 2014 10:33:49 +0100
+Subject: [PATCH] fix integer overflow after 50 days (thx Hauke Mehrtens)
+
+---
+ src/odhcp6c.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/odhcp6c.c b/src/odhcp6c.c
+index 3c6b3b0..ba11ced 100644
+--- a/src/odhcp6c.c
++++ b/src/odhcp6c.c
+@@ -470,7 +470,7 @@ uint64_t odhcp6c_get_milli_time(void)
+ {
+ 	struct timespec t = {0, 0};
+ 	syscall(SYS_clock_gettime, CLOCK_MONOTONIC, &t);
+-	return t.tv_sec * 1000 + t.tv_nsec / 1000000;
++	return ((uint64_t)t.tv_sec) * 1000 + ((uint64_t)t.tv_nsec) / 1000000;
+ }
+ 
+ 
+-- 
+1.7.10.4
+
