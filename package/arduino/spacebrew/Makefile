@@ -9,12 +9,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=spacebrew
 PKG_VERSION:=1.0.0
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=git://github.com/julioterra/yunSpacebrew.git
 PKG_SOURCE_SUBDIR:=spacebrew-$(PKG_VERSION)
-PKG_SOURCE_VERSION:=d05bfb3cb609d04e3e2fcbe10367fa7177cf8c2e
+PKG_SOURCE_VERSION:=b3cb342031535c4421880f680b985ce100d75c42
 PKG_SOURCE_PROTO:=git
 
 include $(INCLUDE_DIR)/package.mk
@@ -22,12 +22,12 @@ include $(INCLUDE_DIR)/package.mk
 define Package/spacebrew
   SECTION:=net
   CATEGORY:=Network
-  TITLE:= A toolkit for creating interactive spaces
+  TITLE:= Easily connect the Arduino Yun to Spacebrew
   DEPENDS:=+python-mini +python-json
 endef
 
 define Package/spacebrew/description
-	Flexible routing and re-routing between anything that can speak over Websockets.
+	This library was developed to enable you to easily connect the Arduino Yun to Spacebrew. To learn more about Spacebrew visit Spacebrew.cc
 endef
 
 define Build/Compile
