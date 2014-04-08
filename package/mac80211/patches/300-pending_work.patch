@@ -1,3 +1,15 @@
+commit 93f310a38a1d81a4bc8fcd9bf29628bd721cf2ef
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Sun Apr 6 23:35:28 2014 +0200
+
+    ath9k_hw: reduce ANI firstep range for older chips
+    
+    Use 0-8 instead of 0-16, which is closer to the old implementation.
+    Also drop the overwrite of the firstep_low parameter to improve
+    stability.
+    
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+
 commit 584d297fd29fb39c76af25ae74ff9d5fe74c8a14
 Author: Helmut Schaa <helmut.schaa@googlemail.com>
 Date:   Wed Mar 12 10:37:55 2014 +0100
@@ -4029,7 +4041,7 @@ Date:   Thu Jan 23 20:06:34 2014 +0100
  
  	switch (cmd & ah->ani_function) {
  	case ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION:{
-@@ -1008,42 +1004,11 @@ static bool ar5008_hw_ani_control_new(st
+@@ -1008,42 +1004,9 @@ static bool ar5008_hw_ani_control_new(st
  	case ATH9K_ANI_FIRSTEP_LEVEL:{
  		u32 level = param;
  
@@ -4051,7 +4063,7 @@ Date:   Thu Jan 23 20:06:34 2014 +0100
 -			value = ATH9K_SIG_FIRSTEP_SETTING_MIN;
 -		if (value > ATH9K_SIG_FIRSTEP_SETTING_MAX)
 -			value = ATH9K_SIG_FIRSTEP_SETTING_MAX;
-+		value = level * 2;
++		value = level;
  		REG_RMW_FIELD(ah, AR_PHY_FIND_SIG,
 -			      AR_PHY_FIND_SIG_FIRSTEP,
 -			      value);
@@ -4068,14 +4080,13 @@ Date:   Thu Jan 23 20:06:34 2014 +0100
 -		if (value2 > ATH9K_SIG_FIRSTEP_SETTING_MAX)
 -			value2 = ATH9K_SIG_FIRSTEP_SETTING_MAX;
 -
-+			      AR_PHY_FIND_SIG_FIRSTEP, value);
- 		REG_RMW_FIELD(ah, AR_PHY_FIND_SIG_LOW,
+-		REG_RMW_FIELD(ah, AR_PHY_FIND_SIG_LOW,
 -			      AR_PHY_FIND_SIG_FIRSTEP_LOW, value2);
-+			      AR_PHY_FIND_SIG_FIRSTEP_LOW, value);
++			      AR_PHY_FIND_SIG_FIRSTEP, value);
  
  		if (level != aniState->firstepLevel) {
  			ath_dbg(common, ANI,
-@@ -1060,7 +1025,7 @@ static bool ar5008_hw_ani_control_new(st
+@@ -1060,7 +1023,7 @@ static bool ar5008_hw_ani_control_new(st
  				aniState->firstepLevel,
  				level,
  				ATH9K_ANI_FIRSTEP_LVL,
@@ -4084,7 +4095,7 @@ Date:   Thu Jan 23 20:06:34 2014 +0100
  				aniState->iniDef.firstepLow);
  			if (level > aniState->firstepLevel)
  				ah->stats.ast_ani_stepup++;
-@@ -1073,41 +1038,13 @@ static bool ar5008_hw_ani_control_new(st
+@@ -1073,41 +1036,13 @@ static bool ar5008_hw_ani_control_new(st
  	case ATH9K_ANI_SPUR_IMMUNITY_LEVEL:{
  		u32 level = param;
  
@@ -4131,7 +4142,7 @@ Date:   Thu Jan 23 20:06:34 2014 +0100
  
  		if (level != aniState->spurImmunityLevel) {
  			ath_dbg(common, ANI,
-@@ -1124,7 +1061,7 @@ static bool ar5008_hw_ani_control_new(st
+@@ -1124,7 +1059,7 @@ static bool ar5008_hw_ani_control_new(st
  				aniState->spurImmunityLevel,
  				level,
  				ATH9K_ANI_SPUR_IMMUNE_LVL,
