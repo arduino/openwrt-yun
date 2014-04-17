@@ -299,8 +299,6 @@ sub install_generic() {
 
 		-d "./package/feeds" or mkdir "./package/feeds";
 		-d "./package/feeds/$feed->[1]" or mkdir "./package/feeds/$feed->[1]";
-		# if a package exists in both arduino and feeds, then prefer the local version
-		-f "./package/arduino/$path" and return 1;
 		system("ln -sf ../../../$path ./package/feeds/$feed->[1]/");
 	} else {
 		warn "Package is not valid\n";
