@@ -1,9 +1,0 @@
-#!/bin/sh
-kill-bridge
-
-cp "$1" /tmp || exit 1
-
-filename=`basename $1`
-
-exec sysupgrade -n "/tmp/$filename"
-
