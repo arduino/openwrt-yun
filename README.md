@@ -1,6 +1,6 @@
-# OpenWRT Yún
+# OpenWrt Yún
 
-This is a custom version of OpenWRT, targeted to the Arduino Yún. Some of its core packages, including the kernel and uboot, are derived from Linino.
+This is a custom version of OpenWrt, targeted to the Arduino Yún. Some of its core packages, including the kernel and uboot, are derived from Linino.
 
 ## How to build
 
@@ -29,7 +29,7 @@ mkdir -p ~/DOWNLOAD
 Now clone the repo with
 
 ```bash
-git clone git@github.com:arduino/openwrt-yun.git
+git clone git@github.com:arduino/OpenWrt-yun.git
 ```
 
 ### Building
@@ -37,7 +37,7 @@ git clone git@github.com:arduino/openwrt-yun.git
 Now start the build process
 
 ```bash
-cd openwrt-yun
+cd OpenWrt-yun
 DL_FOLDER=~/DOWNLOAD ./build.sh
 ```
 
