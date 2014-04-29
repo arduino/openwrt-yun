@@ -32,6 +32,24 @@ Now clone the repo with
 git clone git@github.com:arduino/OpenWrt-yun.git
 ```
 
+Note: If you clone the repository over HTTPS by instead executing:
+
+```bash
+git clone https://github.com/arduino/openwrt-yun.git
+````
+
+You _must_ edit the feeds.conf.default file and change this line from:
+
+```
+src-git packages git@github.com:arduino/openwrt-packages-yun.git
+```
+
+to:
+
+```
+src-git packages https://github.com/arduino/openwrt-packages-yun.git
+```
+
 ### Building
 
 Now start the build process
