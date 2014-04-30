@@ -26,10 +26,28 @@ While building, a lot of software will be downloaded. In order to avoid download
 mkdir -p ~/DOWNLOAD
 ```
 
-Now clone the repo with
+To clone the repository using git SSH, make sure you [have your public SSH key in your github profile](https://help.github.com/articles/generating-ssh-keys) and execute:
 
 ```bash
 git clone git@github.com:arduino/OpenWrt-yun.git
+```
+
+However if you can't use git SSH you can instead clone the repository over HTTPS by executing:
+
+```bash
+git clone https://github.com/arduino/openwrt-yun.git
+````
+
+If you clone the repository using HTTPS you _must_ edit the feeds.conf.default file and change the package repository from git SSH to HTTPS by changing the first line from:
+
+```
+src-git packages git@github.com:arduino/openwrt-packages-yun.git
+```
+
+to:
+
+```
+src-git packages https://github.com/arduino/openwrt-packages-yun.git
 ```
 
 ### Building
