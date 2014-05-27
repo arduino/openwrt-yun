@@ -19,8 +19,8 @@ rm -rf feeds
 rm -f .config
 git checkout .config
 if [ "Yes" = "$BUILD_BASE_ONLY" ]; then
-	sed 's/=m$/=n/' <.config >.baseonlyconfig
-	mv .config .origconfig; mv .baseonlyconfig .config;
+        sed 's/=m$/=n/' <.config >.baseonlyconfig
+        mv .config .origconfig; mv .baseonlyconfig .config;
 fi
 make oldconfig
 
