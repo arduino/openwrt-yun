@@ -18,6 +18,10 @@ rm -rf feeds
 ./scripts/feeds uninstall erlang freeswitch remotefs libzstream shflags opensips pulseaudio xmlrpc-c rtorrent sox umurmur-polarssl freecwmp-zstream osirisd logtrigger libplist libimobiledevice cmus mxml boost wt etherpuppet php4
 rm -f .config
 git checkout .config
+if [ "Yes" = "$BUILD_BASE_ONLY" ]; then
+	sed 's/=m$/=n/' <.config >.baseonlyconfig
+	mv .config .origconfig; mv .baseonlyconfig .config;
+fi
 make oldconfig
 
 if [ -z "$MAKE_JOBS" ]; then
