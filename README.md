@@ -8,15 +8,15 @@ This is a custom version of OpenWrt, targeted to the Arduino Yún. Some of its c
 
 In order to successfully build it, you need to setup a [Debian](https://www.debian.org/) computer with at least 30G of free disk space: we use Debian Wheezy. Using a virtual machine is suggested: you can make one with either [VirtualBox](https://www.virtualbox.org/) or [KVM](http://www.linux-kvm.org/page/Main_Pag).
 
-Once the Debian computer is ready, run the following command
+Once the Debian computer is ready, log in via SSH, then type:
 
 ```bash
-apt-get install git subversion build-essential asciidoc \
-	fastjar flex gawk libgtk2.0-dev intltool zlib1g-dev \
-	genisoimage libncurses5-dev libssl-dev ruby sdcc unzip \
-	bison libboost-dev libxml-parser-perl libusb-dev bin86 \
-	bcc sharutils openjdk-7-jdk mercurial cvs bzr
+wget https://raw.githubusercontent.com/arduino/openwrt-yun/master/FIRST_SETUP_debian_wheezy.sh
+chmod +x FIRST_SETUP_debian_wheezy.sh
+sudo ./FIRST_SETUP_debian_wheezy.sh
 ```
+
+Wait until all the prerequisites get installed.
 
 ### Cloning the repo and setting up a download folder
 
@@ -29,7 +29,7 @@ mkdir -p ~/DOWNLOAD
 To clone the repository using git SSH, make sure you [have your public SSH key in your github profile](https://help.github.com/articles/generating-ssh-keys) and execute:
 
 ```bash
-git clone git@github.com:arduino/OpenWrt-yun.git
+git clone git@github.com:arduino/openwrt-yun.git
 ```
 
 However if you can't use git SSH you can instead clone the repository over HTTPS by executing:
@@ -38,24 +38,12 @@ However if you can't use git SSH you can instead clone the repository over HTTPS
 git clone https://github.com/arduino/openwrt-yun.git
 ````
 
-If you clone the repository using HTTPS you _must_ edit the feeds.conf.default file and change the package repository from git SSH to HTTPS by changing the first line from:
-
-```
-src-git packages git@github.com:arduino/openwrt-packages-yun.git
-```
-
-to:
-
-```
-src-git packages https://github.com/arduino/openwrt-packages-yun.git
-```
-
 ### Building
 
 Now start the build process
 
 ```bash
-cd OpenWrt-yun
+cd openwrt-yun
 DL_FOLDER=~/DOWNLOAD ./build.sh
 ```
 
@@ -81,3 +69,4 @@ nice -n 10 nohup make -j 1 V=s &
 
 This will create a `nohup.out` file with the whole output of the compilation, errors included. Please paste the content of that file on http://pastebin.com/ or zip and attach that file on a new topic on the 
 [arduino forum](http://forum.arduino.cc/index.php?board=93.0).
+
