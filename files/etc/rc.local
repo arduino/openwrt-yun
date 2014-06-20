@@ -4,4 +4,6 @@
 wifi-live-or-reset
 boot-complete-notify
 
+#reset-mcu
+
 exit 0
