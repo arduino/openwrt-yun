@@ -1,0 +1,67 @@
+diff --git a/libopkg/opkg_download.c b/libopkg/opkg_download.c
+index a1d1e62..0dfe565 100644
+--- a/libopkg/opkg_download.c
++++ b/libopkg/opkg_download.c
+@@ -80,6 +80,33 @@ str_starts_with(const char *str, const char *prefix)
+     return (strncmp(str, prefix, strlen(prefix)) == 0);
+ }
+ 
++static char* file_name_url_encode(const char* src, const char to_replace, const char* replacement) {
++    char *file_name = xstrdup(src);
++    file_name = basename(file_name);
++
++    char *new_file_name = alloca(strlen(file_name) * strlen(replacement));
++
++    char *file_name_index, *new_file_name_index;
++    for (file_name_index = file_name, new_file_name_index = new_file_name; *file_name_index != '\0'; file_name_index++) {
++	if (*file_name_index == to_replace) {
++	    sprintf(new_file_name_index, "%s", replacement);
++	    new_file_name_index += strlen(replacement);
++        } else {
++	    *new_file_name_index = *file_name_index;
++	    new_file_name_index++;
++        }
++    }
++    *new_file_name_index = '\0';
++
++    char *dir_name = xstrdup(src);
++    dir_name = dirname(dir_name);
++
++    char *new_src = malloc(strlen(dir_name) + strlen(new_file_name) + 2);
++    sprintf(new_src, "%s/%s", dir_name, new_file_name);
++
++    return new_src;
++}
++
+ int
+ opkg_download(const char *src, const char *dest_file_name,
+ 	curl_progress_func cb, void *data, const short hide_error)
+@@ -159,6 +186,7 @@ opkg_download(const char *src, const char *dest_file_name,
+       int res;
+       const char *argv[8];
+       int i = 0;
++      char *new_src = file_name_url_encode(src, '+', "%2B");
+ 
+       argv[i++] = "wget";
+       argv[i++] = "-q";
+@@ -168,15 +196,18 @@ opkg_download(const char *src, const char *dest_file_name,
+       }
+       argv[i++] = "-O";
+       argv[i++] = tmp_file_location;
+-      argv[i++] = src;
++      argv[i++] = new_src;
+       argv[i++] = NULL;
+       res = xsystem(argv);
+ 
+       if (res) {
+-	opkg_msg(ERROR, "Failed to download %s, wget returned %d.\n", src, res);
++	opkg_msg(ERROR, "Failed to download %s, wget returned %d.\n", new_src, res);
+ 	free(tmp_file_location);
++	free(new_src);
+ 	return -1;
+       }
++
++      free(new_src);
+     }
+ #endif
+ 
