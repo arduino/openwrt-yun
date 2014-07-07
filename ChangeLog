@@ -1,0 +1,36 @@
+=== Release 1.2 - in progress
+OpenWrt (Linux side)
+ - opkg: fixed problem with downloading packages with pluses ("+") in the name. Issue #16
+
+=== Release 1.1 - June 23th 2014
+
+OpenWrt (Linux side)
+ - Wifi now supports DFS
+
+=== Release 1.0 - April 17th 2014
+
+OpenWrt (Linux side)
+ - wget now supports ssl
+ - Fixed fuses values in run-avrdude
+ - nano is now built-in (no need to become "vi" experts any more)
+ - Updated ruby to 1.9.3-p429
+ - Fixed USB port stability (when using it both with a pen drive or as a serial device)
+ - Patched dhcp script to fix ethernet routing issue (see http://forum.arduino.cc/index.php?topic=203754.msg1507343#msg1507343)
+ - Added lots of webcam modules
+ - Fixed USB keyboard support
+ - Heartbleed http://heartbleed.com/
+ - Linux side ready visual notification: when linux boot completes, the usb led lights up (it's bright white)
+ - Disk space expander tutorial: using an micro SD card to have gigabytes of disk space
+ - Added "upgrade-all" script for easier massive upgrade of packages (available only after having followed the ExpandingYunDiskSpace tutorial)
+ - Node.js is now available as an optional package: other native nodejs packages include bleno, noble, serialport, socket.io. See the list at github
+
+Web panel (configuration, REST API)
+- Previously, jsonp calls were triggered by the "jsonp" query string parameter only. Now, you can use "callback" as well. This makes it easier to query the Yún with jquery. #1
+- Added Mailbox support: http://arduino.local/mailbox/DATA #3
+- Various fixes https://github.com/arduino/YunWebUI/issues?milestone=1&page=1&state=closed
+
+Bridge (python)
+ - File.size() now implemented
+ - PHP bridge client (thx Luca Saltoggio)
+ - Bridge is now run with "-u" python flag, preventing some random lockups in the Bridge
+ - Resolved conflict with python "json" module
