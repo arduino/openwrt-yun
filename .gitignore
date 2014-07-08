@@ -23,3 +23,5 @@ TAGS*~
 delete_ours.sh
 update_feeds.sh
 package/arduino/yun-conf/files/etc/arduino/arduino_gpg.*
+.origconfig
+
