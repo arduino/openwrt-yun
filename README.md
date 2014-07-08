@@ -59,6 +59,11 @@ MAKE_JOBS=5 nice -n 10 make -j $MAKE_JOBS V=s
 
 Change the value of `MAKE_JOBS` to the number of your cores + 1. My pc has 4 cores, so I set it to 5.
 
+### Building the image only, skipping all optional packages
+
+Add `BUILD_BASE_ONLY=Yes` at the beggining of the command. Example: `BUILD_BASE_ONLY=Yes DL_FOLDER=~/DOWNLOAD ./build.sh`.
+
+
 ### Troubleshooting
 
 There is a variety of reasons for the build process to fail. If you're unable to understand why it failed, resume compiling with the following command:
