@@ -1,6 +1,8 @@
-=== Release 1.2 - in progress
+=== Release 1.2 - July 11th 2014
+
 OpenWrt (Linux side)
- - opkg: fixed problem with downloading packages with pluses ("+") in the name. Issue #16
+ - opkg: fixed problem with downloading packages with pluses ("+") in the name. Issue https://github.com/arduino/openwrt-yun/issues/16
+ - ImageMagick was missing some binaries. Issue https://github.com/arduino/openwrt-packages-yun/issues/5
 
 === Release 1.1 - June 23th 2014
 
