@@ -1,0 +1,13 @@
+--- a/include/configs/ap121.h	2014-07-11 18:01:42.674149845 +0200
++++ b/include/configs/ap121.h	2014-07-11 18:02:48.542151411 +0200
+@@ -358,7 +358,9 @@
+ /* For Kite, only PCI-e interface is valid */
+ #define AR7240_ART_PCICFG_OFFSET        3
+ 
+-
++#define CONFIG_AUTOBOOT_KEYED
++#define CONFIG_AUTOBOOT_PROMPT		"autoboot in %d seconds (type 'ard' to enter u-boot console)...\n"
++#define CONFIG_AUTOBOOT_STOP_STR	"ard"
+ 
+ #include <cmd_confdefs.h>
+ 
