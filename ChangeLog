@@ -1,23 +1,23 @@
-=== Release 1.3 - July 11th 2014
+=== Release 1.3 - July 14th 2014
 
-OpenWrt (Linux side)
+OpenWRT-Yun (Linux side)
  - run-avrdude: fixed a fail occuring when /tmp/efuse file cannot be created. Fixes https://github.com/arduino/openwrt-packages-yun/issues/9
  - u-boot: stopping autoboot now requires typing 'ard', instead than any single char. Fixes https://github.com/arduino/openwrt-yun/issues/19
 
 === Release 1.2 - July 11th 2014
 
-OpenWrt (Linux side)
+OpenWRT-Yun (Linux side)
  - opkg: fixed problem with downloading packages with pluses ("+") in the name. Issue https://github.com/arduino/openwrt-yun/issues/16
  - ImageMagick was missing some binaries. Issue https://github.com/arduino/openwrt-packages-yun/issues/5
 
 === Release 1.1 - June 23th 2014
 
-OpenWrt (Linux side)
+OpenWRT-Yun (Linux side)
  - Wifi now supports DFS
 
 === Release 1.0 - April 17th 2014
 
-OpenWrt (Linux side)
+OpenWRT-Yun (Linux side)
  - wget now supports ssl
  - Fixed fuses values in run-avrdude
  - nano is now built-in (no need to become "vi" experts any more)
