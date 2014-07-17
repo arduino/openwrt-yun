@@ -1,6 +1,6 @@
---- ./drivers/tty/serial/ar933x_uart.c.ori	2013-06-27 13:57:53.251438941 +0200
-+++ ./drivers/tty/serial/ar933x_uart.c	2013-06-27 13:56:16.271442407 +0200
-@@ -191,6 +191,8 @@
+--- a/drivers/tty/serial/ar933x_uart.c
++++ b/drivers/tty/serial/ar933x_uart.c
+@@ -191,6 +191,8 @@ static unsigned long ar933x_uart_get_bau
  	return t;
  }
  
@@ -9,26 +9,35 @@
  static void ar933x_uart_get_scale_step(unsigned int clk,
  				       unsigned int baud,
  				       unsigned int *scale,
-@@ -199,6 +201,25 @@
+@@ -199,6 +201,34 @@ static void ar933x_uart_get_scale_step(u
  	unsigned int tscale;
  	long min_diff;
  
 +#ifdef UART_BAUDRATE_COMP_MEGA32U4
 +	/* Fix timing issues on Atmega32U4 w/16Mhz oscillator */
-+	if (baud == 115200) {
-+		*scale = 0x000C;
-+		*step  = 0x2000;
-+		return;
++	if (clk == 25000000) {
++		if (baud == 115200) {
++			*scale = 0x000C;
++			*step  = 0x2000;
++			return;
++		}
++		if (baud == 250000 || baud == 230400) {
++			*scale = 0x0017;
++			*step  = 0x7AE0;
++			return;
++		}
++		if (baud == 500000) {
++			*scale = 0x000B;
++			*step  = 0x7AE0;
++			return;
++		}
 +	}
-+	if (baud == 250000 || baud == 230400) {
-+		*scale = 0x0017;
-+		*step  = 0x7AE0;
-+		return;
-+	}
-+	if (baud == 500000) {
-+		*scale = 0x000B;
-+		*step  = 0x7AE0;
-+		return;
++	else if (clk == 40000000) {
++		if (baud == 250000 || baud == 230400) {
++			*scale = 0x0004;
++			*step  = 0x1000;
++			return;
++		}
 +	}
 +#endif
 +

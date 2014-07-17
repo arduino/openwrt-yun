@@ -116,6 +116,7 @@ platform_check_image() {
 	airrouter | \
 	bullet-m | \
 	nanostation-m | \
+	nuy | \
 	rocket-m | \
 	rw2458n | \
 	wzr-hp-g300nh2 | \
