@@ -1,11 +1,17 @@
+=== Release 1.4.1 - August 8th, 2014
+
+Web panel (bugfix)
+ - A bug in date parsing caused issues in displaying webpanel homepage. Fixes https://github.com/arduino/YunWebUI/issues/12
+
 === Release 1.4 - July 15th, 2014
 
 OpenWrt-Yun (Linux side)
  - kernel: loop back device is now built-in
  - new scripts extract-built-date and extract-built-date-from-sysupgrade-image
 
-Web panel (configuration, REST API)
+Web panel (configuration, REST API, sketch upload)
  - Image upgrade box now shows image creation date and notify user if it's newer than the one running on the Yun. Fixes https://github.com/arduino/openwrt-yun/issues/2
+ - It's now possible to upload a precompiled sketch (.hex file) via webpanel
 
 === Release 1.3 - July 14th, 2014
 
