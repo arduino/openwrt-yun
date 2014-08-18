@@ -1,3 +1,8 @@
+=== Release 1.4.2 - Work In Progress
+
+Web panel (bugfix)
+ - Fixed a javascript error in webpanel login page
+
 === Release 1.4.1 - August 8th, 2014
 
 Web panel (bugfix)
