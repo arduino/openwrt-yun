@@ -2,7 +2,11 @@
 
 Web panel (bugfix)
  - Fixed a javascript error in webpanel login page
+ - Fixed wrong JSONP serialization. See https://github.com/arduino/YunWebUI/issues/13
 
+OpenWrt-Yun (Linux side)
+ - Added "image builder" to the build process
+ 
 === Release 1.4.1 - August 8th, 2014
 
 Web panel (bugfix)
