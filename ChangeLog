@@ -6,6 +6,7 @@ Web panel (bugfix)
 
 OpenWrt-Yun (Linux side)
  - Added "image builder" to the build process
+ - Added alljoyn feeds and packages
  
 === Release 1.4.1 - August 8th, 2014
 
