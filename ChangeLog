@@ -5,8 +5,8 @@ Web panel (bugfix)
  - Fixed wrong JSONP serialization. See https://github.com/arduino/YunWebUI/issues/13
 
 OpenWrt-Yun (Linux side)
- - Added "image builder" to the build process
- - Added alljoyn feeds and packages
+ - Added "image builder" to the build process. See https://github.com/arduino/openwrt-yun/issues/20
+ - Added alljoyn feeds and packages. Ses https://github.com/arduino/openwrt-yun/issues/24
  
 === Release 1.4.1 - August 8th, 2014
 
