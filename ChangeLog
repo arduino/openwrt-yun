@@ -5,6 +5,7 @@ Web Panel
 
 OpenWrt-Yun (Linux side)
  - Added yun-gcc package. Thanks @noblepepper. See https://github.com/arduino/openwrt-packages-yun/pull/7
+ - If swap is active, nodejs runs with no arguments. Otherwise, it runs with constraining memory options. See https://github.com/arduino/openwrt-packages-yun/issues/4
 
 === Release 1.4.2 - September 4th, 2014
 
