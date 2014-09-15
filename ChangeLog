@@ -16,7 +16,7 @@ OpenWrt-Yun (Linux side)
  - Added "image builder" to the build process. See https://github.com/arduino/openwrt-yun/issues/20
  - Added alljoyn feeds and packages. Ses https://github.com/arduino/openwrt-yun/issues/24
  
-=== Release 1.4.1 - August 8th, 2014
+=== Release 1.4.1 - August 7th, 2014
 
 Web panel (bugfix)
  - A bug in date parsing caused issues in displaying webpanel homepage. Fixes https://github.com/arduino/YunWebUI/issues/12
@@ -37,7 +37,7 @@ OpenWrt-Yun (Linux side)
  - run-avrdude: fixed a fail occuring when /tmp/efuse file cannot be created. Fixes https://github.com/arduino/openwrt-packages-yun/issues/9
  - u-boot: stopping autoboot now requires typing 'ard', instead than any single char. Fixes https://github.com/arduino/openwrt-yun/issues/19
 
-=== Release 1.2 - July 11th, 2014
+=== Release 1.2 - July 12th, 2014
 
 OpenWrt-Yun (Linux side)
  - opkg: fixed problem with downloading packages with pluses ("+") in the name. Issue https://github.com/arduino/openwrt-yun/issues/16
