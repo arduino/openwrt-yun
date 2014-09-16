@@ -37,7 +37,7 @@ define Package/opkg
   TITLE:=opkg package management system
   MAINTAINER:=Jo-Philipp Wich <xm@subsignal.org>
   URL:=http://wiki.openmoko.org/wiki/Opkg
-  DEPENDS+= +libgpgme
+  DEPENDS+= +libgpgme +libcurl
 endef
 
 define Package/opkg/description
@@ -59,7 +59,6 @@ TARGET_CFLAGS += -ffunction-sections -fdata-sections
 EXTRA_CFLAGS += $(TARGET_CPPFLAGS)
 
 CONFIGURE_ARGS += \
-	--disable-curl \
 	--enable-gpg \
 	--with-opkgetcdir=/etc \
 	--with-opkglockfile=/var/lock/opkg.lock
