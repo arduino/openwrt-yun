@@ -1,0 +1,45 @@
+diff --git a/libopkg/opkg_download.c b/libopkg/opkg_download.c
+index a1d1e62..e767627 100644
+--- a/libopkg/opkg_download.c
++++ b/libopkg/opkg_download.c
+@@ -129,15 +129,37 @@ opkg_download(const char *src, const char *dest_file_name,
+ #ifdef HAVE_CURL
+     CURLcode res;
+     FILE * file = fopen (tmp_file_location, "w");
+-
++    char * escaped_url, *final_url;
+     curl = opkg_curl_init (cb, data);
+     if (curl)
+     {
+-	curl_easy_setopt (curl, CURLOPT_URL, src);
+-	curl_easy_setopt (curl, CURLOPT_WRITEDATA, file);
++	int basename_lenght, final_url_lenght;
++	char *file_name = xstrdup (src);
++
++	file_name = basename (file_name);
++	basename_lenght = strlen(src) - strlen(file_name);
++
++	escaped_url = curl_easy_escape (curl, &src[basename_lenght], 0);
++
++	if (escaped_url == NULL)
++	{
++	    opkg_msg(ERROR, "Failed to download %s, error encoding the URL\n", src);
++	    return -1;
++	}
++
++	final_url_lenght = strlen(src) - strlen(file_name) + strlen(escaped_url) + 1;
++	final_url = (char*) malloc (sizeof(char) * final_url_lenght);
++	strncpy (final_url, src, basename_lenght);
++	strcpy (&final_url[basename_lenght], escaped_url);
+ 
++	curl_easy_setopt (curl, CURLOPT_URL, final_url);
++	curl_easy_setopt (curl, CURLOPT_WRITEDATA, file);
+ 	res = curl_easy_perform (curl);
++
++	curl_free (escaped_url);
++	free (final_url);
+ 	fclose (file);
++
+ 	if (res)
+ 	{
+ 	    long error_code;
