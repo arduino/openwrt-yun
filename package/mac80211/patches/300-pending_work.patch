@@ -1,3 +1,96 @@
+commit 11f17631d9bf2a9e910dac7d09ba4581f5693831
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Tue Sep 9 09:48:30 2014 +0200
+
+    ath9k_hw: fix PLL clock initialization for newer SoC
+    
+    On AR934x and newer SoC devices, the layout of the AR_RTC_PLL_CONTROL
+    register changed. This currently breaks at least 5/10 MHz operation.
+    AR933x uses the old layout.
+    
+    It might also have been causing other stability issues because of the
+    different location of the PLL_BYPASS bit which needs to be set during
+    PLL clock initialization.
+    
+    This patch also removes more instances of hardcoded register values in
+    favor of properly computed ones with the PLL_BYPASS bit added.
+    
+    Reported-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+
+commit 0fecedddd4a0945873db1bd230ec6a168b3cc4fe
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Mon Sep 8 18:35:08 2014 +0200
+
+    ath9k_hw: reduce ANI spur immunity setting on HT40 extension channel
+    
+    The cycpwr_thr1 value needs to be lower on the extension channel than on
+    the control channel, similar to how the register settings are programmed
+    in the initvals.
+    
+    Also drop the unnecessary check for HT40 - this register can always be
+    written. This patch has been reported to improve HT40 stability and
+    throughput in some environments.
+    
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+
+commit 30d7434ccb853b96de698a040888fa4dacd0cc19
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Mon Sep 8 18:31:26 2014 +0200
+
+    Revert "ath9k_hw: reduce ANI firstep range for older chips"
+    
+    This reverts commit 09efc56345be4146ab9fc87a55c837ed5d6ea1ab
+    
+    I've received reports that this change is decreasing throughput in some
+    rare conditions on an AR9280 based device
+    
+    Cc: stable@vger.kernel.org
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+
+commit 15ed54948f508ad1baad79c30050e2d29a21696d
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Fri Jul 25 16:18:03 2014 +0200
+
+    mac80211: fix smps mode check for AP_VLAN
+    
+    In ieee80211_sta_ps_deliver_wakeup, sdata->smps_mode is checked. This is
+    initialized only for the base AP interface, not the individual VLANs.
+    
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+
+commit bc74ad816bba291359ae46301173ea744bdda9d2
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Fri Jul 25 16:15:44 2014 +0200
+
+    mac80211: ignore AP_VLAN in ieee80211_recalc_chanctx_chantype
+    
+    When bringing down the AP, a WARN_ON is hit because the bss config chandef
+    is empty here.
+    Since AP_VLAN channel settings do not matter for anything chanctx related
+    (always inherits the settings from the AP interface), let's just ignore
+    it here.
+    
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+
+commit ff354dbdd743e5fe186df8cd17982db19f78231a
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Wed Jul 23 15:33:26 2014 +0200
+
+    ath9k: fix aggregation session lockup
+    
+    If an aggregation session fails, frames still end up in the driver queue
+    with IEEE80211_TX_CTL_AMPDU set.
+    This causes tx for the affected station/tid to stall, since
+    ath_tx_get_tid_subframe returning packets to send.
+    
+    Fix this by clearing IEEE80211_TX_CTL_AMPDU as long as no aggregation
+    session is running.
+    
+    Cc: stable@vger.kernel.org
+    Reported-by: Antonio Quartulli <antonio@open-mesh.com>
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+
 commit 38695a6e5a940e6a524523b88a33916b016fb2a1
 Author: Felix Fietkau <nbd@openwrt.org>
 Date:   Fri Jul 11 12:06:18 2014 +0200
@@ -627,7 +720,21 @@ Date:   Mon May 19 21:20:49 2014 +0200
  	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
  	mutex_init(&sta->ampdu_mlme.mtx);
  #ifdef CPTCFG_MAC80211_MESH
-@@ -1140,8 +1137,15 @@ void ieee80211_sta_ps_deliver_wakeup(str
+@@ -1101,8 +1098,11 @@ void ieee80211_sta_ps_deliver_wakeup(str
+ 	unsigned long flags;
+ 	struct ps_data *ps;
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_AP ||
+-	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
++				     u.ap);
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
+ 		ps = &sdata->bss->ps;
+ 	else if (ieee80211_vif_is_mesh(&sdata->vif))
+ 		ps = &sdata->u.mesh.ps;
+@@ -1140,8 +1140,15 @@ void ieee80211_sta_ps_deliver_wakeup(str
  	}
  
  	ieee80211_add_pending_skbs(local, &pending);
@@ -645,7 +752,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  	spin_unlock(&sta->ps_lock);
  
  	atomic_dec(&ps->num_sta_ps);
-@@ -1542,10 +1546,26 @@ void ieee80211_sta_block_awake(struct ie
+@@ -1542,10 +1549,26 @@ void ieee80211_sta_block_awake(struct ie
  
  	trace_api_sta_block_awake(sta->local, pubsta, block);
  
@@ -675,7 +782,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  }
  EXPORT_SYMBOL(ieee80211_sta_block_awake);
  
-@@ -1703,3 +1723,140 @@ u8 sta_info_tx_streams(struct sta_info *
+@@ -1703,3 +1726,140 @@ u8 sta_info_tx_streams(struct sta_info *
  	return ((ht_cap->mcs.tx_params & IEEE80211_HT_MCS_TX_MAX_STREAMS_MASK)
  			>> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT) + 1;
  }
@@ -2990,7 +3097,23 @@ Date:   Mon May 19 21:20:49 2014 +0200
  	if (WARN_ON(--txq->pending_frames < 0))
  		txq->pending_frames = 0;
  
-@@ -1999,6 +1997,7 @@ static void setup_frame_info(struct ieee
+@@ -887,6 +885,15 @@ ath_tx_get_tid_subframe(struct ath_softc
+ 
+ 		tx_info = IEEE80211_SKB_CB(skb);
+ 		tx_info->flags &= ~IEEE80211_TX_CTL_CLEAR_PS_FILT;
++
++		/*
++		 * No aggregation session is running, but there may be frames
++		 * from a previous session or a failed attempt in the queue.
++		 * Send them out as normal data frames
++		 */
++		if (!tid->active)
++			tx_info->flags &= ~IEEE80211_TX_CTL_AMPDU;
++
+ 		if (!(tx_info->flags & IEEE80211_TX_CTL_AMPDU)) {
+ 			bf->bf_state.bf_type = 0;
+ 			return bf;
+@@ -1999,6 +2006,7 @@ static void setup_frame_info(struct ieee
  		an = (struct ath_node *) sta->drv_priv;
  
  	memset(fi, 0, sizeof(*fi));
@@ -2998,7 +3121,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  	if (hw_key)
  		fi->keyix = hw_key->hw_key_idx;
  	else if (an && ieee80211_is_data(hdr->frame_control) && an->ps_key > 0)
-@@ -2150,6 +2149,7 @@ int ath_tx_start(struct ieee80211_hw *hw
+@@ -2150,6 +2158,7 @@ int ath_tx_start(struct ieee80211_hw *hw
  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
  	struct ieee80211_sta *sta = txctl->sta;
  	struct ieee80211_vif *vif = info->control.vif;
@@ -3006,7 +3129,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  	struct ath_softc *sc = hw->priv;
  	struct ath_txq *txq = txctl->txq;
  	struct ath_atx_tid *tid = NULL;
-@@ -2170,11 +2170,13 @@ int ath_tx_start(struct ieee80211_hw *hw
+@@ -2170,11 +2179,13 @@ int ath_tx_start(struct ieee80211_hw *hw
  	q = skb_get_queue_mapping(skb);
  
  	ath_txq_lock(sc, txq);
@@ -3025,3 +3148,146 @@ Date:   Mon May 19 21:20:49 2014 +0200
  	}
  
  	if (txctl->an && ieee80211_is_data_present(hdr->frame_control))
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -521,6 +521,8 @@ static void ieee80211_recalc_chanctx_cha
+ 			continue;
+ 		if (rcu_access_pointer(sdata->vif.chanctx_conf) != conf)
+ 			continue;
++		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++			continue;
+ 
+ 		if (!compat)
+ 			compat = &sdata->vif.bss_conf.chandef;
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -1004,9 +1004,11 @@ static bool ar5008_hw_ani_control_new(st
+ 	case ATH9K_ANI_FIRSTEP_LEVEL:{
+ 		u32 level = param;
+ 
+-		value = level;
++		value = level * 2;
+ 		REG_RMW_FIELD(ah, AR_PHY_FIND_SIG,
+ 			      AR_PHY_FIND_SIG_FIRSTEP, value);
++		REG_RMW_FIELD(ah, AR_PHY_FIND_SIG_LOW,
++			      AR_PHY_FIND_SIG_FIRSTEP_LOW, value);
+ 
+ 		if (level != aniState->firstepLevel) {
+ 			ath_dbg(common, ANI,
+@@ -1040,9 +1042,8 @@ static bool ar5008_hw_ani_control_new(st
+ 		REG_RMW_FIELD(ah, AR_PHY_TIMING5,
+ 			      AR_PHY_TIMING5_CYCPWR_THR1, value);
+ 
+-		if (IS_CHAN_HT40(ah->curchan))
+-			REG_RMW_FIELD(ah, AR_PHY_EXT_CCA,
+-				      AR_PHY_EXT_TIMING5_CYCPWR_THR1, value);
++		REG_RMW_FIELD(ah, AR_PHY_EXT_CCA,
++				  AR_PHY_EXT_TIMING5_CYCPWR_THR1, value - 1);
+ 
+ 		if (level != aniState->spurImmunityLevel) {
+ 			ath_dbg(common, ANI,
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -517,6 +517,23 @@ static void ar9003_hw_spur_mitigate(stru
+ 	ar9003_hw_spur_mitigate_ofdm(ah, chan);
+ }
+ 
++static u32 ar9003_hw_compute_pll_control_soc(struct ath_hw *ah,
++					     struct ath9k_channel *chan)
++{
++	u32 pll;
++
++	pll = SM(0x5, AR_RTC_9300_SOC_PLL_REFDIV);
++
++	if (chan && IS_CHAN_HALF_RATE(chan))
++		pll |= SM(0x1, AR_RTC_9300_SOC_PLL_CLKSEL);
++	else if (chan && IS_CHAN_QUARTER_RATE(chan))
++		pll |= SM(0x2, AR_RTC_9300_SOC_PLL_CLKSEL);
++
++	pll |= SM(0x2c, AR_RTC_9300_SOC_PLL_DIV_INT);
++
++	return pll;
++}
++
+ static u32 ar9003_hw_compute_pll_control(struct ath_hw *ah,
+ 					 struct ath9k_channel *chan)
+ {
+@@ -1779,7 +1796,12 @@ void ar9003_hw_attach_phy_ops(struct ath
+ 
+ 	priv_ops->rf_set_freq = ar9003_hw_set_channel;
+ 	priv_ops->spur_mitigate_freq = ar9003_hw_spur_mitigate;
+-	priv_ops->compute_pll_control = ar9003_hw_compute_pll_control;
++
++	if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah))
++		priv_ops->compute_pll_control = ar9003_hw_compute_pll_control_soc;
++	else
++		priv_ops->compute_pll_control = ar9003_hw_compute_pll_control;
++
+ 	priv_ops->set_channel_regs = ar9003_hw_set_channel_regs;
+ 	priv_ops->init_bb = ar9003_hw_init_bb;
+ 	priv_ops->process_ini = ar9003_hw_process_ini;
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -702,6 +702,8 @@ static void ath9k_hw_init_pll(struct ath
+ {
+ 	u32 pll;
+ 
++	pll = ath9k_hw_compute_pll_control(ah, chan);
++
+ 	if (AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
+ 		/* program BB PLL ki and kd value, ki=0x4, kd=0x40 */
+ 		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL2,
+@@ -752,7 +754,8 @@ static void ath9k_hw_init_pll(struct ath
+ 		REG_RMW_FIELD(ah, AR_CH0_DDR_DPLL3,
+ 			      AR_CH0_DPLL3_PHASE_SHIFT, 0x1);
+ 
+-		REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x1142c);
++		REG_WRITE(ah, AR_RTC_PLL_CONTROL,
++			  pll | AR_RTC_9300_PLL_BYPASS);
+ 		udelay(1000);
+ 
+ 		/* program refdiv, nint, frac to RTC register */
+@@ -768,7 +771,8 @@ static void ath9k_hw_init_pll(struct ath
+ 	} else if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah)) {
+ 		u32 regval, pll2_divint, pll2_divfrac, refdiv;
+ 
+-		REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x1142c);
++		REG_WRITE(ah, AR_RTC_PLL_CONTROL,
++			  pll | AR_RTC_9300_SOC_PLL_BYPASS);
+ 		udelay(1000);
+ 
+ 		REG_SET_BIT(ah, AR_PHY_PLL_MODE, 0x1 << 16);
+@@ -840,7 +844,6 @@ static void ath9k_hw_init_pll(struct ath
+ 		udelay(1000);
+ 	}
+ 
+-	pll = ath9k_hw_compute_pll_control(ah, chan);
+ 	if (AR_SREV_9565(ah))
+ 		pll |= 0x40000;
+ 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1236,12 +1236,23 @@ enum {
+ #define AR_CH0_DPLL3_PHASE_SHIFT_S   23
+ #define AR_PHY_CCA_NOM_VAL_2GHZ      -118
+ 
++#define AR_RTC_9300_SOC_PLL_DIV_INT          0x0000003f
++#define AR_RTC_9300_SOC_PLL_DIV_INT_S        0
++#define AR_RTC_9300_SOC_PLL_DIV_FRAC         0x000fffc0
++#define AR_RTC_9300_SOC_PLL_DIV_FRAC_S       6
++#define AR_RTC_9300_SOC_PLL_REFDIV           0x01f00000
++#define AR_RTC_9300_SOC_PLL_REFDIV_S         20
++#define AR_RTC_9300_SOC_PLL_CLKSEL           0x06000000
++#define AR_RTC_9300_SOC_PLL_CLKSEL_S         25
++#define AR_RTC_9300_SOC_PLL_BYPASS           0x08000000
++
+ #define AR_RTC_9300_PLL_DIV          0x000003ff
+ #define AR_RTC_9300_PLL_DIV_S        0
+ #define AR_RTC_9300_PLL_REFDIV       0x00003C00
+ #define AR_RTC_9300_PLL_REFDIV_S     10
+ #define AR_RTC_9300_PLL_CLKSEL       0x0000C000
+ #define AR_RTC_9300_PLL_CLKSEL_S     14
++#define AR_RTC_9300_PLL_BYPASS       0x00010000
+ 
+ #define AR_RTC_9160_PLL_DIV	0x000003ff
+ #define AR_RTC_9160_PLL_DIV_S   0
