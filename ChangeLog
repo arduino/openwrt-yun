@@ -1,4 +1,4 @@
-=== Release 1.5.0 - Work In Progress
+=== Release 1.5.0 - September 17th, 2014
 
 Web Panel
  - REST api had fixed timeout of 5 seconds. Now timeout is configurable in file /etc/config/arduino. See https://github.com/arduino/YunWebUI/issues/11
