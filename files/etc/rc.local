@@ -4,6 +4,15 @@
 wifi-live-or-reset
 boot-complete-notify
 
+# Uncomment the following line in order to reset the microntroller
+# right after linux becomes ready
+
 #reset-mcu
+
+# Uncomment the following line in order to disable kernel console
+# debug messages, thus having a silent and clean serial communication
+# with the microcontroller
+
+#echo 0 > /proc/sys/kernel/printk
 
 exit 0
