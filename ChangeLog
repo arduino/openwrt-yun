@@ -1,3 +1,17 @@
+=== Release 1.5.1 - Work in progress
+
+OpenWrt-Yun (Linux side)
+ - sync with latest stable OpenWrt
+ - added commented line in rc.local that disable kernel console debug messages
+ - upgraded nodejs to latest 0.10.32
+ - upgraded node-socket.io modules to 1.x
+ - added node-socket.io-client-legacy and node-socket.io-legacy (0.9.x series of socket.io)
+ - upgraded all the other nodejs modules
+ - upgraded python bridge (see below)
+
+Bridge (python and php)
+ - bridgeclient new functions: getall, delete and mailbox (also see https://github.com/arduino/YunBridge/issues/13)
+
 === Release 1.5.0 - September 17th, 2014
 
 Web Panel
