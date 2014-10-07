@@ -14,6 +14,7 @@ Bridge (python and php)
 
 Web Panel
  - build date of running OpenWrt-Yun is now shown in homepage footer. See https://github.com/arduino/YunWebUI/issues/15
+ - list of available wifis now includes signal strength. See https://github.com/arduino/YunWebUI/issues/16
 
 === Release 1.5.0 - September 17th, 2014
 
