@@ -11,6 +11,7 @@ OpenWrt-Yun (Linux side)
 
 Bridge (python and php)
  - bridgeclient new functions: getall, delete and mailbox (also see https://github.com/arduino/YunBridge/issues/13)
+ - bridgeclient speed up: calling begin() and close() before and after all the subsequent calls to bridge, make these calls faster. See https://github.com/arduino/YunBridge/issues/4 and bridgeclient_example.py
 
 Web Panel
  - build date of running OpenWrt-Yun is now shown in homepage footer. See https://github.com/arduino/YunWebUI/issues/15
