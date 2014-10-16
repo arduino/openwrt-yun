@@ -16,7 +16,7 @@ config dnsmasq
 	option resolvfile	'/tmp/resolv.conf.auto'
 	#list server		'/mycompany.local/1.2.3.4'
 	option nonwildcard	1
-	list interface		lo
+	list interface		lo,wlan0
 	#list notinterface	lo
 	#list bogusnxdomain     '64.94.110.11'
 
