@@ -1,4 +1,4 @@
-=== Release 1.5.2 - Work in progress
+=== Release 1.5.2 - October 18th, 2014
 
 OpenWrt-Yun (Linux side)
  - disabled DNS server on every interface but localhost, thus preventing a network security issue introduced by an 
