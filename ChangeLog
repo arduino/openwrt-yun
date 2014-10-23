@@ -2,6 +2,7 @@
 
 OpenWrt-Yun (Linux side)
  - disabled DNS server on every interface but localhost, thus preventing a network security issue introduced by an "open resolver"
+ - wifi name when in Access Point mode can now be specified in configuration file /etc/config/arduino. If set to "Arduino", actual name will be "Arduino Yun" plus MAC address. Custom name will be retained even after resetting wireless configuration. See https://github.com/arduino/openwrt-yun/issues/6
 
 === Release 1.5.1 - October 13th, 2014
 
