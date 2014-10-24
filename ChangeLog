@@ -1,3 +1,12 @@
+=== Release 1.5.3 - Work in progress
+
+OpenWrt-Yun (Linux side)
+ - yun-gcc now includes many header files. Checkout @noblepepper blog for some instructions
+   http://noblepepper.com/wp/blog/2014/10/22/gcc-g-on-an-arduino-yun/
+   See https://github.com/arduino/openwrt-packages-yun/issues/18
+ - nodejs: bleno version bump
+ - nodejs: new native module sqlite3. See https://github.com/arduino/openwrt-packages-yun/issues/20
+
 === Release 1.5.2 - October 18th, 2014
 
 OpenWrt-Yun (Linux side)
