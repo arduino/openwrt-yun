@@ -6,6 +6,9 @@ OpenWrt-Yun (Linux side)
    See https://github.com/arduino/openwrt-packages-yun/issues/18
  - nodejs: bleno version bump
  - nodejs: new native module sqlite3. See https://github.com/arduino/openwrt-packages-yun/issues/20
+ 
+Web Panel
+ - fixed wrong timezone selection on advanced settings. See https://github.com/arduino/openwrt-yun/issues/29
 
 === Release 1.5.2 - October 18th, 2014
 
