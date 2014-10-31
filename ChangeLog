@@ -6,6 +6,8 @@ OpenWrt-Yun (Linux side)
    See https://github.com/arduino/openwrt-packages-yun/issues/18
  - nodejs: bleno version bump
  - nodejs: new native module sqlite3. See https://github.com/arduino/openwrt-packages-yun/issues/20
+ - nodejs: wrapper script now works well even with swap partitions (it was working with swap files only)
+ - nodejs: version bump to 0.10.33
  
 Web Panel
  - fixed wrong timezone selection on advanced settings. See https://github.com/arduino/openwrt-yun/issues/29
