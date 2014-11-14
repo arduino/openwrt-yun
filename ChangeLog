@@ -1,4 +1,4 @@
-=== Release 1.5.3 - Work in progress
+=== Release 1.5.3 - November 13th, 2014
 
 OpenWrt-Yun (Linux side)
  - yun-gcc now includes many header files. Checkout @noblepepper blog for some instructions
