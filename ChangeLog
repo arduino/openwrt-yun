@@ -128,6 +128,6 @@ Web panel (configuration, REST API)
 
 Bridge (python)
  - File.size() now implemented
- - PHP bridge client (thx Luca Saltoggio)
+ - PHP bridge client (thx Luca Soltoggio)
  - Bridge is now run with "-u" python flag, preventing some random lockups in the Bridge
  - Resolved conflict with python "json" module
