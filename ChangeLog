@@ -1,3 +1,12 @@
+=== Release 1.5.3.1 - Work in progress
+
+OpenWrt-Yun (Linux side)
+ - Minor readme bugfix https://github.com/arduino/openwrt-yun/issues/36
+
+Web Panel
+ - Fix spelling mistakes
+https://github.com/arduino/YunWebUI/commit/d176ced81d0ce3f15f2c69af6d72dc7577dd8560 https://github.com/arduino/YunWebUI/pull/20
+ 
 === Release 1.5.3 - November 13th, 2014
 
 OpenWrt-Yun (Linux side)
