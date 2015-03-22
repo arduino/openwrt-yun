@@ -447,6 +447,9 @@ ar71xx_board_detect() {
 	*"Arduino Yun")
 		name="yun"
 		;;
+	*"8devices NUY")
+		name="nuy"
+		;;
 	esac
 
 	case "$machine" in

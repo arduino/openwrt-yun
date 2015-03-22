@@ -1,0 +1,40 @@
+--- a/arch/mips/ath79/Kconfig
++++ b/arch/mips/ath79/Kconfig
+@@ -660,6 +660,19 @@ config ATH79_MACH_Yun
+ 	help
+ 	  Say 'Y' here if you want your kernel to support the
+ 	  Arduino Yun.
++
++config ATH79_MACH_NUY
++	bool "8devices NUY"
++	select SOC_AR933X
++	select ATH79_DEV_ETH
++	select ATH79_DEV_GPIO_BUTTONS
++	select ATH79_DEV_LEDS_GPIO
++	select ATH79_DEV_M25P80
++	select ATH79_DEV_USB
++	select ATH79_DEV_WMAC
++	help
++	  Say 'Y' here if you want your kernel to support the
++	  8devices NUY.
+ endmenu
+ 
+ config SOC_AR71XX
+--- a/arch/mips/ath79/Makefile
++++ b/arch/mips/ath79/Makefile
+@@ -105,4 +105,5 @@ obj-$(CONFIG_ATH79_MACH_WZR_HP_G300NH2)
+ obj-$(CONFIG_ATH79_MACH_WZR_HP_AG300H)	+= mach-wzr-hp-ag300h.o
+ obj-$(CONFIG_ATH79_MACH_WZR_HP_G450H)	+= mach-wzr-hp-g450h.o
+ obj-$(CONFIG_ATH79_MACH_ZCN_1523H)	+= mach-zcn-1523h.o
++obj-$(CONFIG_ATH79_MACH_NUY)		+= mach-nuy.o
+ 
+--- a/arch/mips/ath79/machtypes.h
++++ b/arch/mips/ath79/machtypes.h
+@@ -118,6 +118,7 @@ enum ath79_mach_type {
+ 	ATH79_MACH_ZCN_1523H_2,		/* Zcomax ZCN-1523H-2-xx */
+ 	ATH79_MACH_ZCN_1523H_5,		/* Zcomax ZCN-1523H-5-xx */
+ 	ATH79_MACH_Yun,			/* Yun */
++    	ATH79_MACH_NUY,			/* 8devices NUY */
+ };
+ 
+ #endif /* _ATH79_MACHTYPE_H */

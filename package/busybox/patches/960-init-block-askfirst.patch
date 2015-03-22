@@ -1,0 +1,23 @@
+--- a/init/init.c
++++ b/init/init.c
+@@ -476,6 +476,7 @@ static pid_t run(const struct init_actio
+ #endif
+ 			"\nPlease press Enter to activate this console. ";
+ 		char c;
++		char c2;
+ 		/*
+ 		 * Save memory by not exec-ing anything large (like a shell)
+ 		 * before the user wants it. This is critical if swap is not
+@@ -488,8 +489,12 @@ static pid_t run(const struct init_actio
+ 					"(pid %d, tty '%s')\n",
+ 				a->command, getpid(), a->terminal);
+ 		full_write(STDOUT_FILENO, press_enter, sizeof(press_enter) - 1);
++
++		while (open_read_close("/tmp/block_init_askfirst", &c2, 1) >= 0)
++			sleep(1);
++
+ 		while (safe_read(STDIN_FILENO, &c, 1) == 1 && c != '\n')
+ 			continue;
+ 	}
+ 
+ 	/*

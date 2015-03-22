@@ -89,6 +89,11 @@ nbg460n_550n_550nh)
 	ucidef_set_led_wlan "wlan" "WLAN" "nbg460n:green:wlan" "phy0tpt"
 	;;
 
+nuy)
+	ucidef_set_led_netdev "wan" "WAN" "ds:green:wan" "eth1"
+	ucidef_set_led_wlan "wlan" "WLAN" "ds:green:wlan" "phy0tpt"
+	;;
+
 om2p | \
 om2p-hs | \
 om2p-lc)
