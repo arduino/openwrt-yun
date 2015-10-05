@@ -61,7 +61,7 @@ Change the value of `MAKE_JOBS` to the number of your cores + 1. My pc has 4 cor
 
 ### Building the image only, skipping all optional packages
 
-Add `BUILD_BASE_ONLY=Yes` at the beggining of the command. Example: `BUILD_BASE_ONLY=Yes DL_FOLDER=~/DOWNLOAD ./build.sh`.
+Add `BUILD_BASE_ONLY=Yes` at the beginning of the command. Example: `BUILD_BASE_ONLY=Yes DL_FOLDER=~/DOWNLOAD ./build.sh`.
 
 
 ### Troubleshooting
