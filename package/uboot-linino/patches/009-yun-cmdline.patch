@@ -1,0 +1,13 @@
+diff --git a/include/configs/ap121.h b/include/configs/ap121.h
+index a08e1fc..bfeffa2 100644
+--- a/include/configs/ap121.h
++++ b/include/configs/ap121.h
+@@ -86,7 +86,7 @@
+ #undef MTDPARTS_DEFAULT
+ 
+ #if (FLASH_SIZE == 16)
+-#define CONFIG_BOOTARGS     "console=ttyS0,115200 root=31:02 rootfstype=squashfs init=/sbin/init mtdparts=ar7240-nor0:256k(u-boot),64k(u-boot-env),14656k(rootfs),1280k(uImage),64k(NVRAM),64k(ART)"
++#define CONFIG_BOOTARGS     "board=YUN console=ttyATH0,250000 mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,14656k(rootfs),1280k(kernel),64k(nvram),64k(art),15936k@0x50000(firmware) rootfstype=squashfs,jffs2 noinitrd"
+ #define MTDPARTS_DEFAULT    "mtdparts=ar7240-nor0:256k(u-boot),64k(u-boot-env),14656k(rootfs),1280k(uImage),64k(NVRAM),64k(ART)"
+ #elif (FLASH_SIZE == 8)
+ #define	CONFIG_BOOTARGS     "console=ttyS0,115200 root=31:02 rootfstype=squashfs init=/sbin/init mtdparts=ar7240-nor0:256k(u-boot),64k(u-boot-env),6464k(rootfs),1280k(uImage),64k(NVRAM),64k(ART)"
