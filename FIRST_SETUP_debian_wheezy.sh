@@ -24,7 +24,7 @@ apt-get install -y git subversion build-essential asciidoc \
 	bcc sharutils openjdk-7-jdk mercurial cvs bzr \
 	nodejs-legacy curl
 
-curl https://www.npmjs.org/install.sh | sh
+curl -L https://www.npmjs.org/install.sh | sh
 
 echo "ALL DONE! YEAH!!"
 
